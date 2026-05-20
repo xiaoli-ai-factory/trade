@@ -65,3 +65,29 @@ s8_rsi_reversal:                       # RSI 超买超卖反转（教科书技�
   rebalance_when: "crossover_only"
   # 经济学先验：超买超卖反转是教科书第二大技术指标策略（与 S6 双均线呼应）。
   # 假设：A 股长期趋势主导期 RSI 会"超买更超买"，反转信号会被吞噬；震荡市可能有效但成本/whipsaw 吃光。
+
+s9_risk_parity:                        # 风险平价/低波动（学术经典：AQR/Asness）
+  enabled: true
+  rebalance: "monthly"                 # 月频再平衡
+  pool:                                # 多资产池(可投资 ETF + 国债 ETF 提供低 vol 资产)
+    - { code: "510300", name: "沪深300ETF" }
+    - { code: "510500", name: "中证500ETF" }
+    - { code: "512880", name: "证券ETF" }
+    - { code: "512800", name: "银行ETF" }
+    - { code: "159995", name: "芯片ETF" }
+    - { code: "512010", name: "医药ETF" }
+    - { code: "511010", name: "国债ETF" }    # 低波动资产,关键
+  lookback_vol_days: 60                # 60 日波动率窗口
+  weight_method: "inverse_volatility"  # 经典 ERC 简化版:权重 ∝ 1/σ_i
+  weight_normalize: true               # sum(w)=1
+  allow_short: false
+  # 经济学先验：风险平价是 AQR/Bridgewater 等顶级机构核心配置(Asness 论文支撑)。
+  # 假设：A 股 ETF 池里波动率排序与收益率排序常常错位,反而存在"低波动陷阱"
+  # ——低波动股是冷股/僵尸股,把权重给它们会拖累整体。验证是否真有"少亏"效果。
+
+s9b_low_vol_stock_picking:             # S9 变体：纯股票低波动选股(对比 ETF 版)
+  enabled: false                       # 先做 ETF 版,验证后再开
+  rebalance: "monthly"
+  hold_n: 20
+  lookback_vol_days: 120
+  pool: "csi300_constituents"
