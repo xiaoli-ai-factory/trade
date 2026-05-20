@@ -643,6 +643,30 @@ def get_etf_daily(
     return out
 
 
+def get_etf_daily_sina(
+    symbol: str | int,
+    start: str | date = "1990-01-01",
+    end: str | date | None = None,
+    refresh: bool = False,
+) -> pd.DataFrame:
+    """Return ETF daily bars from Sina's fund ETF endpoint only."""
+    start_date = _parse_date(start)
+    end_date = _parse_date(end or date.today())
+    code = _normalize_symbol(symbol)
+    path = _cache_path("etf_daily_sina", code, _date_str(start_date), _date_str(end_date))
+    cached = _read_cache(path, refresh)
+    if cached is not None:
+        return cached
+
+    raw = _fetch_etf_daily_sina(code)
+    normalized = _normalize_etf_daily_sina(raw, code)
+    if normalized.empty:
+        raise RuntimeError(f"Sina ETF daily fetch failed for {code}")
+    out = _finalize_s3_daily(normalized, code, start_date, end_date, name=code, source="sina_fund_etf_hist_sina")
+    _write_cache(path, out)
+    return out
+
+
 def _normalize_daily_tencent(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
     if raw.empty:
         return pd.DataFrame()

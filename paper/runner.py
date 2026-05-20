@@ -8,6 +8,7 @@ import importlib
 import json
 import math
 import time
+from calendar import monthrange
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, timedelta
 from pathlib import Path
@@ -25,8 +26,10 @@ from data.akshare_source import (
     _trade_dates,
     _universe,
     get_daily,
+    get_etf_daily_sina,
     get_index_daily,
 )
+from strategies.s12_global_risk_parity import S12GlobalRiskParityStrategy
 from strategies.s3b_trend import S3BTrendStrategy
 
 
@@ -35,6 +38,9 @@ CONFIG_DIR = PROJECT_ROOT / "configs"
 PAPER_DIR = PROJECT_ROOT / "paper"
 TREND_ACCOUNT = "oos_walkforward_trend"
 FORWARD_ACCOUNT = "forward"
+S12_ACCOUNT = "s12_forward"
+S12_STRATEGY = "s12_global_rp"
+S12_CONFIG_KEY = "s12_global_risk_parity"
 
 
 def _paper_broker_cls():
@@ -132,6 +138,64 @@ def _safe_float(value: Any) -> float:
     if value is None or pd.isna(value):
         return float("nan")
     return float(value)
+
+
+def _trade_calendar(start: date, end: date) -> list[date]:
+    if end < start:
+        return []
+    return sorted(_parse_date(item) for item in _trade_dates(start, end, refresh=False).tolist())
+
+
+def _is_trade_date(value: date) -> bool:
+    return value in set(_trade_calendar(value, value))
+
+
+def _month_trade_dates(value: date) -> list[date]:
+    start = value.replace(day=1)
+    end = value.replace(day=monthrange(value.year, value.month)[1])
+    return _trade_calendar(start, end)
+
+
+def _is_month_end_trade_date(value: date) -> bool:
+    dates = _month_trade_dates(value)
+    return bool(dates) and value == dates[-1]
+
+
+def _is_first_trade_date_of_month(value: date) -> bool:
+    dates = _month_trade_dates(value)
+    return bool(dates) and value == dates[0]
+
+
+def _next_exchange_trading_date(value: date) -> date:
+    dates = _trade_calendar(value + timedelta(days=1), value + timedelta(days=45))
+    if dates:
+        return dates[0]
+    return _next_business_day(value)
+
+
+def is_s12_trading_day(value: str | date | pd.Timestamp) -> bool:
+    """Public helper used by cron scripts to skip non-trading days."""
+
+    return _is_trade_date(_parse_date(value))
+
+
+def _strategy_mode_cfg(paper_cfg: dict[str, Any], key: str) -> dict[str, Any]:
+    strategies = paper_cfg.get("strategies", {})
+    item = strategies.get(key, {}) if isinstance(strategies, dict) else {}
+    return item if isinstance(item, dict) else {}
+
+
+def _strategy_enabled(paper_cfg: dict[str, Any], key: str, default: bool = True) -> bool:
+    item = _strategy_mode_cfg(paper_cfg, key)
+    return bool(item.get("enabled", default))
+
+
+def _load_s12_strategy_cfg(paper_cfg: dict[str, Any]) -> dict[str, Any]:
+    addon = _load_yaml("strategy_addon.yaml")[S12_CONFIG_KEY].copy()
+    mode_cfg = _strategy_mode_cfg(paper_cfg, S12_STRATEGY)
+    if "rebalance" in mode_cfg:
+        addon["forward_rebalance"] = str(mode_cfg["rebalance"])
+    return addon
 
 
 def _has_recent_limit_up(symbol: str, as_of_date: date, lookback_days: int) -> bool:
@@ -378,6 +442,283 @@ def _select_s1(on_date: date, paper_cfg: dict[str, Any], strategy_cfg: dict[str,
     return selected.head(int(strategy_cfg["max_positions"])).reset_index(drop=True), "ok", stats
 
 
+def _s12_symbols(strategy_cfg: dict[str, Any]) -> tuple[str, ...]:
+    return tuple(str(item["code"]) for item in strategy_cfg["pool"])
+
+
+def _normalize_s12_frame(frame: pd.DataFrame, on_date: date) -> pd.DataFrame:
+    if not isinstance(frame, pd.DataFrame) or frame.empty:
+        return pd.DataFrame()
+    out = frame.copy()
+    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
+    out = out.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
+    return out[out["date"] <= on_date].copy()
+
+
+def _load_s12_market_data(
+    strategy_cfg: dict[str, Any],
+    on_date: date,
+    *,
+    refresh: bool,
+) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
+    lookback = int(strategy_cfg["lookback_vol_days"])
+    start = on_date - timedelta(days=max(lookback * 5, 370))
+    data: dict[str, pd.DataFrame] = {}
+    errors: dict[str, str] = {}
+    for symbol in _s12_symbols(strategy_cfg):
+        try:
+            frame = get_etf_daily_sina(symbol, start=start, end=on_date, refresh=refresh)
+        except Exception as exc:
+            errors[symbol] = f"{type(exc).__name__}: {exc}"
+            continue
+        normalized = _normalize_s12_frame(frame, on_date)
+        if normalized.empty:
+            errors[symbol] = "empty_frame"
+            continue
+        data[symbol] = normalized
+    return data, errors
+
+
+def _s12_data_status(
+    symbols: tuple[str, ...],
+    data: dict[str, pd.DataFrame],
+    errors: dict[str, str],
+    on_date: date,
+) -> dict[str, dict[str, Any]]:
+    status: dict[str, dict[str, Any]] = {}
+    for symbol in symbols:
+        frame = data.get(symbol, pd.DataFrame())
+        latest = None if frame.empty else max(frame["date"].tolist())
+        source = ""
+        if not frame.empty and "source" in frame.columns and frame["source"].notna().any():
+            source = str(frame["source"].dropna().iloc[-1])
+        status[symbol] = {
+            "rows": int(len(frame)),
+            "latest": latest.isoformat() if latest else None,
+            "has_as_of_bar": latest == on_date,
+            "source": source,
+            "error": errors.get(symbol),
+        }
+    return status
+
+
+def _s12_missing_as_of(
+    symbols: tuple[str, ...],
+    data: dict[str, pd.DataFrame],
+    on_date: date,
+) -> list[str]:
+    missing: list[str] = []
+    for symbol in symbols:
+        frame = data.get(symbol, pd.DataFrame())
+        if frame.empty or on_date not in set(frame["date"].tolist()):
+            latest = None if frame.empty else max(frame["date"].tolist())
+            missing.append(f"{symbol}:latest={latest or 'NA'}")
+    return missing
+
+
+def _replace_state_row(rows: list[dict[str, Any]], key: str, value: str, row: dict[str, Any]) -> list[dict[str, Any]]:
+    return [item for item in rows if item.get(key) != value] + [row]
+
+
+def _position_json(position: Position) -> dict[str, Any]:
+    return position.__dict__ | {"buy_date": position.buy_date.isoformat()}
+
+
+def _s12_target_orders(
+    on_date: date,
+    broker,
+    strategy_cfg: dict[str, Any],
+    data: dict[str, pd.DataFrame],
+    lot_size: int,
+) -> tuple[dict[str, float], list[Order], str]:
+    symbols = _s12_symbols(strategy_cfg)
+    missing = _s12_missing_as_of(symbols, data, on_date)
+    if missing:
+        return {}, [], "s12_skipped_missing_as_of_bar:" + ",".join(missing)
+
+    strategy = S12GlobalRiskParityStrategy(strategy_cfg)
+    sliced = {symbol: frame[frame["date"] <= on_date].copy() for symbol, frame in data.items()}
+    nav = broker.nav()
+    ctx = {
+        "data": sliced,
+        "positions": broker.positions(),
+        "cash": broker.cash(),
+        "nav": nav,
+        "lot_size": lot_size,
+        "month_end_dates": {on_date},
+    }
+    weights = strategy.target_weights(on_date, ctx)
+    if not weights:
+        return {}, [], "s12_skipped_no_target_weights"
+    orders = strategy.generate_signals(on_date, ctx)
+    return weights, orders, "ok"
+
+
+def _s12_state_meta(broker) -> dict[str, Any]:
+    meta = broker.state.setdefault(
+        "s12_forward",
+        {
+            "target_weights_history": [],
+            "skip_history": [],
+            "run_history": [],
+            "last_run": {},
+        },
+    )
+    meta.setdefault("target_weights_history", [])
+    meta.setdefault("skip_history", [])
+    meta.setdefault("run_history", [])
+    meta.setdefault("last_run", {})
+    return meta
+
+
+def _update_s12_state_meta(
+    broker,
+    summary: dict[str, Any],
+    target_weights: dict[str, float],
+    queued_orders: list[dict[str, Any]],
+) -> None:
+    meta = _s12_state_meta(broker)
+    meta["last_run"] = {
+        "date": summary["date"],
+        "nav": summary["nav"],
+        "cash": summary["cash"],
+        "note": summary["s12_note"],
+        "is_trading_day": summary["is_trading_day"],
+        "is_month_end": summary["is_month_end"],
+        "is_first_trading_day_of_month": summary["is_first_trading_day_of_month"],
+        "data_status": summary["s12_data_status"],
+    }
+    meta["run_history"] = _replace_state_row(list(meta.get("run_history", [])), "date", summary["date"], meta["last_run"])
+    meta["run_history"].sort(key=lambda item: item["date"])
+    if target_weights:
+        row = {
+            "signal_date": summary["date"],
+            "execute_date": summary["next_trade_date"],
+            "target_weights": {key: round(float(value), 10) for key, value in sorted(target_weights.items())},
+            "orders": queued_orders,
+        }
+        meta["target_weights_history"] = _replace_state_row(
+            list(meta.get("target_weights_history", [])),
+            "signal_date",
+            summary["date"],
+            row,
+        )
+    elif summary["s12_note"] != "not_month_end":
+        row = {
+            "date": summary["date"],
+            "note": summary["s12_note"],
+            "data_status": summary["s12_data_status"],
+        }
+        meta["skip_history"] = _replace_state_row(list(meta.get("skip_history", [])), "date", summary["date"], row)
+    broker._save()
+
+
+def run_forward_s12(on_date: date, phase: str = "all") -> dict[str, Any]:
+    if phase not in {"open", "select", "all"}:
+        raise ValueError(f"Unsupported forward phase: {phase}")
+    paper_cfg = _load_yaml("paper.yaml")
+    cost_cfg = CostConfig.from_mapping(_load_yaml("cost.yaml"))
+    mode_cfg = _strategy_mode_cfg(paper_cfg, S12_STRATEGY)
+    strategy_cfg = _load_s12_strategy_cfg(paper_cfg)
+    symbols = _s12_symbols(strategy_cfg)
+    state_dir = PROJECT_ROOT / str(paper_cfg["state_dir"])
+    lot_size = 1 if bool(mode_cfg.get("allow_fractional_lot", False)) else int(paper_cfg["lot_sizes"][S12_STRATEGY])
+    initial_cash = float(mode_cfg.get("initial_cash", paper_cfg["initial_cash"]))
+
+    is_trading_day = _is_trade_date(on_date)
+    if not is_trading_day:
+        summary = {
+            "date": on_date.isoformat(),
+            "phase": phase,
+            "strategy": S12_STRATEGY,
+            "account": S12_ACCOUNT,
+            "configured": _strategy_enabled(paper_cfg, S12_STRATEGY, False),
+            "is_trading_day": False,
+            "is_month_end": False,
+            "is_first_trading_day_of_month": False,
+            "nav": initial_cash,
+            "cash": initial_cash,
+            "positions": [],
+            "pending_orders": [],
+            "due_executions": [],
+            "target_weights": {},
+            "s12_orders": [],
+            "s12_note": "non_trading_day_skipped",
+            "s12_data_status": {},
+            "state_path": str(state_dir / f"{S12_ACCOUNT}.json"),
+            "next_trade_date": None,
+        }
+        _append_s12_forward_log(summary, paper_cfg)
+        _write_s12_dashboard(summary, paper_cfg)
+        return summary
+
+    data, load_errors = _load_s12_market_data(strategy_cfg, on_date, refresh=True)
+    PaperBroker = _paper_broker_cls()
+    broker = PaperBroker(
+        state_dir=state_dir,
+        account=S12_ACCOUNT,
+        trade_date=on_date,
+        market_data=data,
+        cost_config=cost_cfg,
+        initial_cash=initial_cash,
+    )
+    due_executions = broker.process_pending() if phase in {"open", "all"} else []
+    nav = broker.mark_nav(on_date)
+
+    is_month_end = _is_month_end_trade_date(on_date)
+    is_first_day = _is_first_trade_date_of_month(on_date)
+    next_date = _next_exchange_trading_date(on_date)
+    data_status = _s12_data_status(symbols, data, load_errors, on_date)
+    target_weights: dict[str, float] = {}
+    s12_note = "not_month_end"
+    queued_orders: list[dict[str, Any]] = []
+
+    if phase in {"select", "all"} and is_month_end:
+        target_weights, orders, s12_note = _s12_target_orders(on_date, broker, strategy_cfg, data, lot_size)
+        if s12_note == "ok":
+            for order in orders:
+                queued_orders.append(
+                    broker.queue(
+                        order,
+                        execute_date=next_date,
+                        strategy=S12_STRATEGY,
+                        order_id=f"s12_rebalance:{on_date.isoformat()}:{next_date.isoformat()}:{order.symbol}:{order.side}",
+                        lot_size=lot_size,
+                    )
+                )
+            if not queued_orders:
+                s12_note = "s12_target_equals_current_positions"
+    elif phase == "open":
+        s12_note = "open_phase_pending_only"
+
+    nav = broker.mark_nav(on_date)
+    summary = {
+        "date": on_date.isoformat(),
+        "phase": phase,
+        "strategy": S12_STRATEGY,
+        "account": S12_ACCOUNT,
+        "configured": _strategy_enabled(paper_cfg, S12_STRATEGY, False),
+        "is_trading_day": True,
+        "is_month_end": is_month_end,
+        "is_first_trading_day_of_month": is_first_day,
+        "nav": nav,
+        "cash": broker.cash(),
+        "positions": [_position_json(position) for position in broker.positions()],
+        "pending_orders": list(broker.pending_orders()),
+        "due_executions": due_executions,
+        "target_weights": {key: float(value) for key, value in sorted(target_weights.items())},
+        "s12_orders": queued_orders,
+        "s12_note": s12_note,
+        "s12_data_status": data_status,
+        "state_path": str(broker.state_path),
+        "next_trade_date": next_date.isoformat(),
+    }
+    _update_s12_state_meta(broker, summary, target_weights, queued_orders)
+    _append_s12_forward_log(summary, paper_cfg)
+    _write_s12_dashboard(summary, paper_cfg)
+    return summary
+
+
 def _trend_signal_orders(on_date: date, broker, trend_data: dict[str, pd.DataFrame], trend_cfg: dict[str, Any], lot_size: int) -> tuple[list[Order], str]:
     asset = str(trend_cfg["asset"])
     frame = trend_data.get(asset)
@@ -394,10 +735,15 @@ def _trend_signal_orders(on_date: date, broker, trend_data: dict[str, pd.DataFra
     return strategy.generate_signals(on_date, ctx), "ok"
 
 
-def run_forward(on_date: date, phase: str = "all") -> dict[str, Any]:
+def run_forward(on_date: date, phase: str = "all", strategy: str = "configured") -> dict[str, Any]:
     if phase not in {"open", "select", "all"}:
         raise ValueError(f"Unsupported forward phase: {phase}")
     paper_cfg = _load_yaml("paper.yaml")
+    if strategy in {S12_STRATEGY, S12_CONFIG_KEY}:
+        return run_forward_s12(on_date, phase=phase)
+    if strategy == "configured" and _strategy_enabled(paper_cfg, S12_STRATEGY, False):
+        return run_forward_s12(on_date, phase=phase)
+
     strategy_cfg = _load_yaml("strategy.yaml")
     cost_cfg = CostConfig.from_mapping(_load_yaml("cost.yaml"))
     trend_cfg = strategy_cfg["s3b_trend"].copy()
@@ -405,6 +751,12 @@ def run_forward(on_date: date, phase: str = "all") -> dict[str, Any]:
     state_dir = PROJECT_ROOT / str(paper_cfg["state_dir"])
     s1_lot = int(paper_cfg["lot_sizes"]["s1_tail"])
     trend_lot = int(paper_cfg["lot_sizes"]["s3b_trend"])
+    run_s1 = strategy == "legacy" or strategy == "s1_tail" or (
+        strategy == "configured" and _strategy_enabled(paper_cfg, "s1_tail", True)
+    )
+    run_trend = strategy == "legacy" or strategy == "s3b_trend" or (
+        strategy == "configured" and _strategy_enabled(paper_cfg, "s3b_trend", True)
+    )
 
     symbols = _state_symbols(state_dir, FORWARD_ACCOUNT)
     symbols.add(trend_asset)
@@ -425,7 +777,7 @@ def run_forward(on_date: date, phase: str = "all") -> dict[str, Any]:
     due_executions = broker.process_pending()
 
     s1_sell_orders = []
-    if phase in {"open", "all"}:
+    if run_s1 and phase in {"open", "all"}:
         for position in broker.positions():
             if position.symbol == trend_asset or position.quantity <= 0 or not position.sellable:
                 continue
@@ -455,12 +807,12 @@ def run_forward(on_date: date, phase: str = "all") -> dict[str, Any]:
         "rule_candidates": 0,
         "elapsed_seconds": 0.0,
     }
-    if phase in {"select", "all"}:
+    if run_s1 and phase in {"select", "all"}:
         selected, s1_note, s1_stats = _select_s1(on_date, paper_cfg, strategy_cfg["s1_tail"])
     trend_frame = market_data.get(trend_asset, pd.DataFrame())
     next_date = _next_trading_date(trend_frame, on_date) if not trend_frame.empty else _next_business_day(on_date)
     s1_buy_orders = []
-    if phase in {"select", "all"} and not selected.empty:
+    if run_s1 and phase in {"select", "all"} and not selected.empty:
         target_value = broker.nav() / max(int(strategy_cfg["s1_tail"]["max_positions"]), 1)
         for row in selected.itertuples(index=False):
             symbol = str(row.symbol)
@@ -479,7 +831,7 @@ def run_forward(on_date: date, phase: str = "all") -> dict[str, Any]:
                 )
             )
 
-    if phase in {"select", "all"}:
+    if run_trend and phase in {"select", "all"}:
         trend_orders, trend_note = _trend_signal_orders(on_date, broker, {trend_asset: trend_frame}, trend_cfg, trend_lot)
     else:
         trend_orders, trend_note = [], "open_phase_pending_only"
@@ -590,6 +942,175 @@ def _write_forward_status(summary: dict[str, Any], paper_cfg: dict[str, Any]) ->
         "```json",
         json.dumps(summary["pending_orders"], ensure_ascii=False, indent=2, sort_keys=True),
         "```",
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _s12_forward_log_path(paper_cfg: dict[str, Any]) -> Path:
+    return PROJECT_ROOT / str(paper_cfg["state_dir"]) / "s12_forward_log.csv"
+
+
+def _append_s12_forward_log(summary: dict[str, Any], paper_cfg: dict[str, Any]) -> None:
+    path = _s12_forward_log_path(paper_cfg)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "event_key",
+        "event_type",
+        "run_date",
+        "signal_date",
+        "execute_date",
+        "order_id",
+        "strategy",
+        "symbol",
+        "side",
+        "quantity",
+        "status",
+        "reason",
+        "fill_price",
+        "amount",
+        "cost",
+        "cash_delta",
+        "nav_after",
+    ]
+    new_rows: list[dict[str, Any]] = []
+    for item in summary.get("s12_orders", []):
+        order = item.get("order", {})
+        order_id = str(item.get("id", ""))
+        new_rows.append(
+            {
+                "event_key": f"pending:{order_id}",
+                "event_type": "pending",
+                "run_date": summary["date"],
+                "signal_date": order.get("submitted_date"),
+                "execute_date": item.get("execute_date"),
+                "order_id": order_id,
+                "strategy": item.get("strategy", S12_STRATEGY),
+                "symbol": order.get("symbol"),
+                "side": order.get("side"),
+                "quantity": order.get("quantity"),
+                "status": item.get("status", "pending"),
+                "reason": "",
+                "fill_price": "",
+                "amount": "",
+                "cost": "",
+                "cash_delta": "",
+                "nav_after": f"{float(summary['nav']):.6f}",
+            }
+        )
+    for item in summary.get("due_executions", []):
+        order_id = str(item.get("id", ""))
+        new_rows.append(
+            {
+                "event_key": f"execution:{order_id}:{item.get('date')}",
+                "event_type": "execution",
+                "run_date": summary["date"],
+                "signal_date": item.get("submitted_date"),
+                "execute_date": item.get("date"),
+                "order_id": order_id,
+                "strategy": item.get("strategy", S12_STRATEGY),
+                "symbol": item.get("symbol"),
+                "side": item.get("side"),
+                "quantity": item.get("quantity"),
+                "status": item.get("status"),
+                "reason": item.get("reason") or "",
+                "fill_price": item.get("fill_price") if item.get("fill_price") is not None else "",
+                "amount": item.get("amount"),
+                "cost": item.get("cost"),
+                "cash_delta": item.get("cash_delta"),
+                "nav_after": f"{float(summary['nav']):.6f}",
+            }
+        )
+
+    rows: list[dict[str, Any]] = []
+    if path.exists():
+        with path.open("r", encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+    keys = {row["event_key"] for row in new_rows}
+    rows = [row for row in rows if row.get("event_key") not in keys]
+    rows.extend(new_rows)
+    rows.sort(key=lambda row: (row.get("execute_date") or row.get("run_date") or "", row.get("event_type") or "", row.get("order_id") or ""))
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _load_state_for_dashboard(summary: dict[str, Any]) -> dict[str, Any]:
+    path = Path(summary["state_path"])
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _ascii_nav_chart(nav_history: list[dict[str, Any]]) -> str:
+    if not nav_history:
+        return "no NAV samples"
+    points = [(str(item["date"]), float(item["nav"])) for item in nav_history if item.get("nav") is not None]
+    if not points:
+        return "no NAV samples"
+    values = [value for _date, value in points]
+    low = min(values)
+    high = max(values)
+    width = 48
+    lines = []
+    for item_date, nav in points[-60:]:
+        if high <= low:
+            bar_len = 1
+        else:
+            bar_len = max(1, int(round((nav - low) / (high - low) * width)))
+        lines.append(f"{item_date} {nav:10.2f} | {'#' * bar_len}")
+    return "\n".join(lines)
+
+
+def _write_s12_dashboard(summary: dict[str, Any], paper_cfg: dict[str, Any]) -> None:
+    path = PROJECT_ROOT / str(paper_cfg.get("dashboard_path", "paper/dashboard.md"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    state = _load_state_for_dashboard(summary)
+    nav_history = list(state.get("nav_history", []))
+    if not nav_history and summary.get("is_trading_day"):
+        nav_history = [{"date": summary["date"], "nav": summary["nav"], "cash": summary["cash"]}]
+    initial_cash = float(_strategy_mode_cfg(paper_cfg, S12_STRATEGY).get("initial_cash", paper_cfg["initial_cash"]))
+    nav = float(summary["nav"])
+    cumulative_return = nav / initial_cash - 1.0 if initial_cash > 0 else 0.0
+    sample_days = len({item.get("date") for item in nav_history if item.get("date")})
+    gate2_min_days = int(paper_cfg.get("gate2_min_trading_days", 42))
+    gate2_remaining = max(0, gate2_min_days - sample_days)
+    positions = summary.get("positions", [])
+    if positions:
+        position_lines = ["| symbol | quantity | avg_price | buy_date | sellable |", "|---|---:|---:|---|---|"]
+        for item in sorted(positions, key=lambda row: row["symbol"]):
+            position_lines.append(
+                f"| {item['symbol']} | {int(item['quantity'])} | {float(item['avg_price']):.4f} | "
+                f"{item['buy_date']} | {bool(item['sellable'])} |"
+            )
+        positions_text = "\n".join(position_lines)
+    else:
+        positions_text = "none"
+    lines = [
+        "# S12 Forward Paper Dashboard",
+        "",
+        f"- date: {summary['date']}",
+        f"- NAV: {nav:.2f}",
+        f"- cumulative_return: {_fmt_pct(cumulative_return)}",
+        f"- cash: {float(summary['cash']):.2f}",
+        f"- note: {summary['s12_note']}",
+        f"- pending_orders: {len(summary.get('pending_orders', []))}",
+        f"- due_executions: {len(summary.get('due_executions', []))}",
+        f"- Gate2 remaining trading days (>=2 month sample): {gate2_remaining}",
+        f"- sample trading days: {sample_days}/{gate2_min_days}",
+        "",
+        "## Current Positions",
+        positions_text,
+        "",
+        "## NAV Curve",
+        "```text",
+        _ascii_nav_chart(nav_history),
+        "```",
+        "",
+        "## State",
+        f"- state_path: {summary['state_path']}",
+        f"- log_path: {_s12_forward_log_path(paper_cfg)}",
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -724,11 +1245,29 @@ def main() -> None:
     parser.add_argument("--mode", required=True, choices=["forward", "oos_walkforward"])
     parser.add_argument("--date", type=str, default=None)
     parser.add_argument("--phase", choices=["open", "select", "all"], default="all")
+    parser.add_argument(
+        "--strategy",
+        choices=["configured", "legacy", "s1_tail", "s3b_trend", "s12_global_rp", "s12_global_risk_parity"],
+        default="configured",
+    )
     args = parser.parse_args()
     if args.mode == "forward":
         if not args.date:
             raise SystemExit("--date is required for forward mode")
-        summary = run_forward(_parse_date(args.date), phase=args.phase)
+        summary = run_forward(_parse_date(args.date), phase=args.phase, strategy=args.strategy)
+        if summary.get("strategy") == S12_STRATEGY:
+            paper_cfg = _load_yaml("paper.yaml")
+            print(f"wrote {PROJECT_ROOT / str(paper_cfg.get('dashboard_path', 'paper/dashboard.md'))}")
+            print(f"state_path={summary['state_path']}")
+            print(
+                f"forward strategy={summary['strategy']} date={summary['date']} phase={summary['phase']} "
+                f"nav={summary['nav']:.2f} cash={summary['cash']:.2f} positions={len(summary['positions'])} "
+                f"pending={len(summary['pending_orders'])} due_exec={len(summary['due_executions'])} "
+                f"month_end={summary['is_month_end']} first_trading_day={summary['is_first_trading_day_of_month']} "
+                f"target_weights={len(summary['target_weights'])} queued={len(summary['s12_orders'])} "
+                f"note={summary['s12_note']}"
+            )
+            return
         print(f"wrote {PROJECT_ROOT / _load_yaml('paper.yaml')['forward_status_path']}")
         print(f"state_path={summary['state_path']}")
         print(
