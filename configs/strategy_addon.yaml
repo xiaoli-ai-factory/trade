@@ -12,3 +12,56 @@ s4_erba_rotation:
   allow_cash: false                  # 经典版总在二者之一中（不进现金）
   # 经济学先验：A股大小盘风格切换有不同行情驱动(大盘=机构定价/小盘=流动性)，
   # 简单动量轮动是经典叙事。非数据挖掘。
+
+s5_small_cap:                         # 经典小市值策略（2017 前曾是 A 股"圣杯"）
+  enabled: true
+  rebalance: "monthly"                # 月末调仓，下月初开盘成交
+  hold_n: 10                          # 持有最小市值 N 只
+  exclude_st: true                    # 剔除 ST/退市风险股
+  exclude_new_days: 60                # 剔除上市不足 60 日
+  min_price: 1.0                      # 剔除 1 元以下面值股
+  max_market_cap_rank_pct: null       # 无上限,按市值升序取前 hold_n
+  weight: "equal"                     # 等权
+  # 经济学先验：小市值溢价(SMB)是经典风险因子(Fama-French),A股注册制前小盘股流动性溢价显著。
+  # 假设：2017 年(注册制改革+小盘股流动性折价)后该 edge 显著衰减。
+  # 测试它从"圣杯"到"陷阱"的全过程,正是反诈/自用判断核心价值。
+
+s6_dual_ma_crossover:                  # 经典双均线策略（散户技术指标入门头牌）
+  enabled: true
+  asset: "sh000300"                    # 主测沪深300指数（最具代表性）
+  signal_basis: "daily_close"          # D 日收盘后判信号
+  short_ma: 5                          # 5日均线（经典快线）
+  long_ma: 20                          # 20日均线（经典慢线）
+  rule: "短均上穿长均=买入 / 短均下穿长均=卖出/空仓"
+  rebalance_when: "crossover_only"     # 仅在交叉发生时换仓（低换手）
+  allow_short: false                   # 仅多空(持有/现金)，不做空
+  # 经济学先验：双均线是技术分析教科书第一课、散户入门必学。
+  # 假设：在有效市场上，公开的简单技术指标无法稳定 alpha，且在 A 股牛熊切换中
+  # 必产生"高位金叉买在顶、低位死叉卖在底"的反向 whipsaw。
+  # 也跑 sh000905 中证500 与 510300 沪深300ETF 作敏感性。
+
+s7_limit_up_followup:                  # 涨停板次日接力（散户"打板战法"核心）
+  enabled: true
+  rebalance: "daily_signal"            # 每日扫描
+  signal: "yesterday_limit_up"         # D-1 日涨停的股票
+  buy_time: "D_open"                   # 次日开盘买入(模拟"打板族"无脑追涨)
+  hold_period_days: 1                  # 持有 1 个交易日,D+1 开盘卖出
+  max_positions: 3                     # 最多持 3 只(打板族常态)
+  exclude_st: true                     # 剔除 ST
+  exclude_new_days: 60                 # 剔除上市<60日
+  prefilter_min_amount: 5.0e8          # 涨停当日成交额 >5亿(过滤无量涨停)
+  # 经济学先验：A股涨停后短期惯性 vs 次日获利了结 / 一字涨停买不进。
+  # 假设：扣费+5元地板+滑点+一字涨停买不进+次日跌停卖不掉 → 真实期望负。
+  # 这是散户"打板族"的核心信仰,反诈价值最高。
+
+s8_rsi_reversal:                       # RSI 超买超卖反转（教科书技术指标 No.2）
+  enabled: true
+  asset: "sh000300"                    # 主测沪深300（同 S6 对照）
+  signal_basis: "daily_close"
+  rsi_period: 14                       # RSI 14 日（经典）
+  buy_threshold: 30                    # RSI<30 超卖→买
+  sell_threshold: 70                   # RSI>70 超买→卖（空仓）
+  rule: "RSI 上穿 30 买入；下穿 70 卖出"
+  rebalance_when: "crossover_only"
+  # 经济学先验：超买超卖反转是教科书第二大技术指标策略（与 S6 双均线呼应）。
+  # 假设：A 股长期趋势主导期 RSI 会"超买更超买"，反转信号会被吞噬；震荡市可能有效但成本/whipsaw 吃光。

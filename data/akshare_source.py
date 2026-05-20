@@ -471,21 +471,40 @@ def _index_symbol_candidates(symbol: str | int) -> list[str]:
 
 def _fetch_index_daily(symbol: str, start: date, end: date) -> pd.DataFrame:
     last = pd.DataFrame()
+    errors: list[Exception] = []
     for candidate in _index_symbol_candidates(symbol):
-        last = _call_akshare(
-            ak.stock_zh_index_daily_em,
-            symbol=candidate,
-            start_date=start.strftime("%Y%m%d"),
-            end_date=end.strftime("%Y%m%d"),
-        )
+        try:
+            last = _call_akshare(
+                ak.stock_zh_index_daily_em,
+                symbol=candidate,
+                start_date=start.strftime("%Y%m%d"),
+                end_date=end.strftime("%Y%m%d"),
+            )
+        except Exception as exc:
+            errors.append(exc)
+            continue
         if not last.empty:
+            last.attrs["source"] = "eastmoney_stock_zh_index_daily_em"
             return last
+    try:
+        last = _call_akshare(ak.stock_zh_index_daily, symbol=_normalize_index_symbol(symbol))
+    except Exception as exc:
+        errors.append(exc)
+    else:
+        if not last.empty:
+            last["date"] = pd.to_datetime(last["date"], errors="coerce").dt.date
+            last = last[(last["date"] >= start) & (last["date"] <= end)].copy()
+            last.attrs["source"] = "sina_stock_zh_index_daily"
+            return last
+    if errors:
+        raise RuntimeError(f"Index daily fetch failed for {symbol}") from errors[-1]
     return last
 
 
 def _normalize_index_daily(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
     if raw.empty:
         return pd.DataFrame()
+    amount = pd.to_numeric(raw["amount"], errors="coerce") if "amount" in raw.columns else np.nan
     out = pd.DataFrame(
         {
             "symbol": _normalize_index_symbol(symbol),
@@ -495,7 +514,7 @@ def _normalize_index_daily(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
             "low": pd.to_numeric(raw["low"], errors="coerce"),
             "close": pd.to_numeric(raw["close"], errors="coerce"),
             "vol": pd.to_numeric(raw["volume"], errors="coerce") * 100.0,
-            "amount": pd.to_numeric(raw["amount"], errors="coerce"),
+            "amount": amount,
         }
     )
     return out.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
@@ -518,7 +537,8 @@ def get_index_daily(
 
     raw = _fetch_index_daily(code, start_date, end_date)
     normalized = _normalize_index_daily(raw, code)
-    out = _finalize_s3_daily(normalized, code, start_date, end_date, name=code, source="eastmoney_stock_zh_index_daily_em")
+    source = str(raw.attrs.get("source", "eastmoney_stock_zh_index_daily_em"))
+    out = _finalize_s3_daily(normalized, code, start_date, end_date, name=code, source=source)
     _write_cache(path, out)
     return out
 
