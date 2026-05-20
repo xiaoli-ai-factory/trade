@@ -1,0 +1,22 @@
+# 交易成本模型 —— 东方财富 A股散户（约万2.5）
+# 这是回测/模拟盘共用的唯一成本来源。严禁在代码里硬编码任何成本数字。
+# 任何修改必须经 Claude review（碰钱）。
+
+commission:
+  rate: 0.00025          # 佣金万2.5（双边各收）
+  min_per_order: 5.0     # 东方财富单笔佣金最低 5 元 —— 小单杀手，必须建模
+stamp_duty:
+  sell_rate: 0.001       # 印花税千1，仅卖出方向收取
+transfer_fee:
+  rate: 0.00001          # 过户费 万0.1（沪深现统一，双边）
+slippage:
+  rate: 0.002            # 滑点假设 0.2%（模拟盘阶段须用实测值校准并回写此处）
+
+# 单边成本公式（代码必须严格按此实现，不得近似）：
+#   buy_cost  = max(amount*commission.rate, min_per_order) + amount*transfer_fee.rate
+#   sell_cost = max(amount*commission.rate, min_per_order) + amount*transfer_fee.rate
+#               + amount*stamp_duty.sell_rate
+#   成交价 = 基准价 *(1 + slippage.rate) 买入 / *(1 - slippage.rate) 卖出
+notes: >
+  3000 元小单：佣金地板 5 元 = 0.167% 单边；往返+印花税+滑点合计约 0.5%。
+  S1 单次目标仅 1%-3%，成本占比 17%-50%，回测若漏掉 min_per_order 会系统性高估收益。

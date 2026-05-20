@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>杨永兴尾盘法实测反驳</title>
+  <style>
+    :root {
+      --red: #FF2442;
+      --yellow: #FFD93D;
+      --mint: #06D6A0;
+      --ink: #1B1B1B;
+      --muted: #666666;
+      --line: #EFEFEF;
+      --soft-red: #FFF0F3;
+      --soft-yellow: #FFF8D9;
+      --soft-mint: #E9FFF8;
+      --bg: #FAFAFA;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .page {
+      width: min(980px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 72px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 34px;
+      margin: 34px 0;
+      box-shadow: 0 20px 50px rgba(27, 27, 27, 0.08);
+      overflow: hidden;
+    }
+
+    .cover {
+      padding: 0;
+      min-height: 760px;
+      display: grid;
+      align-content: stretch;
+      background: linear-gradient(180deg, #fff 0%, #fff 52%, var(--soft-red) 52%, var(--soft-red) 100%);
+    }
+
+    .cover-inner {
+      padding: 54px 42px;
+      display: grid;
+      gap: 26px;
+      align-content: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--red);
+      color: #fff;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(52px, 9vw, 86px);
+      line-height: 1.04;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    h2 {
+      font-size: clamp(32px, 5.2vw, 48px);
+      line-height: 1.16;
+      letter-spacing: 0;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .red {
+      color: var(--red);
+    }
+
+    .hero-metric {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      border-radius: 22px;
+      background: #fff;
+      padding: 20px 18px;
+      border: 1px solid var(--line);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 34px;
+      line-height: 1.1;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .claim-grid,
+    .finding-grid,
+    .advice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .claim,
+    .finding,
+    .advice {
+      border-radius: 24px;
+      padding: 22px;
+      background: var(--soft-red);
+      min-height: 138px;
+    }
+
+    .claim:nth-child(2),
+    .finding:nth-child(2),
+    .advice:nth-child(2) {
+      background: var(--soft-yellow);
+    }
+
+    .claim:nth-child(3),
+    .finding:nth-child(3),
+    .advice:nth-child(3) {
+      background: var(--soft-mint);
+    }
+
+    .claim strong,
+    .finding strong,
+    .advice strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1.16;
+      margin-bottom: 10px;
+    }
+
+    .design-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .design-item {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 16px;
+      align-items: start;
+      border-radius: 20px;
+      padding: 18px;
+      background: #F7F7F8;
+    }
+
+    .design-item b {
+      color: var(--red);
+      font-size: 22px;
+    }
+
+    .image-card {
+      padding: 26px;
+    }
+
+    .image-card img {
+      width: 100%;
+      display: block;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .caption {
+      margin-top: 20px;
+      padding: 22px;
+      border-radius: 22px;
+      background: #F7F7F8;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .caption b {
+      color: var(--red);
+    }
+
+    .summary {
+      display: grid;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .summary-row {
+      border-left: 8px solid var(--red);
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: #F7F7F8;
+      font-weight: 700;
+    }
+
+    .author {
+      display: grid;
+      grid-template-columns: 1fr 210px;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .qr {
+      width: 210px;
+      aspect-ratio: 1;
+      border: 4px dashed var(--red);
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--red);
+      font-weight: 900;
+      text-align: center;
+      background: var(--soft-red);
+    }
+
+    .source {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    @media (max-width: 720px) {
+      .card {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .cover {
+        min-height: 680px;
+      }
+
+      .cover-inner {
+        padding: 42px 28px;
+      }
+
+      .hero-metric,
+      .claim-grid,
+      .finding-grid,
+      .advice-grid,
+      .author {
+        grid-template-columns: 1fr;
+      }
+
+      .design-item {
+        grid-template-columns: 1fr;
+      }
+
+      .qr {
+        width: 100%;
+        max-width: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card cover">
+      <div class="cover-inner">
+        <span class="tag">AI 量化实测·非营销</span>
+        <h1>杨永兴尾盘法<br><span class="red">实测翻车</span></h1>
+        <p style="font-size: 30px; font-weight: 900;">1423 天 / 36 笔 / 全段亏</p>
+        <p class="muted" style="font-size: 22px;">用 BaoStock 5min PIT 数据，按固定 S1 规则和真实成本模型复盘，不用未来函数，不删退市股。</p>
+        <div class="hero-metric">
+          <div class="metric"><b>36</b><span>六年触发笔数</span></div>
+          <div class="metric"><b>19.4%</b><span>合计胜率</span></div>
+          <div class="metric"><b>FAIL</b><span>Gate1 结论</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>为什么我要扒它 👀</h2>
+      <p style="font-size:22px;font-weight:700;line-height:1.6">
+        最近小红书、知乎、抖音都在吹「杨永兴尾盘法」「100万16个月做到1亿」。<br>
+        我差点也信——准备拿 <span class="red">1 万本金</span>跟着干。<br>
+        做 AI 量化的我多了个心眼：<b>不亲手回测一遍不上真金</b>。<br>
+        结果发现：所有自媒体的"高胜率"都偷偷用了 <span class="red">未来函数</span>（盘后才知道的数据倒推 14:50 决策）。<br>
+        我用 BaoStock 5min + 严格 PIT + 退市股 + 真实成本跑了一遍——下面是真相。
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>网传声称卡</h2>
+      <p class="muted">这些话术来自网传杨永兴 2006-2007 极端牛市叙事，本页只拿它们和固定规则实测做反差，不把网传数字当回测结果。</p>
+      <div class="claim-grid">
+        <div class="claim"><strong>16个月 100万变1亿</strong><span>听起来像财富捷径，但不是这次 2020-2026 PIT 实测输出。</span></div>
+        <div class="claim"><strong>牛市概率超70%</strong><span>实测 bull 段只有 3 笔，且胜率 0%。</span></div>
+        <div class="claim"><strong>每天 1-3%</strong><span>固定规则 1423 个交易日只触发 36 笔。</span></div>
+        <div class="claim"><strong>日均 1.45%</strong><span>实测四段收益分别为 -2.12%、-6.18%、-6.11%、-7.52%。</span></div>
+      </div>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig1_cover.png" alt="杨永兴尾盘法实测翻车封面">
+      <p class="caption"><b>震惊点：</b>不是只亏了一点，而是 1423 天里只打出 36 笔，故事里“每天都有机会”的第一层先塌了。</p>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig2_return_by_regime.png" alt="四段收益柱状图">
+      <p class="caption"><b>原来：</b>bull、bear、range、oos 四段全是负收益，网传“日均 1.45%”放旁边看，反差很刺眼。</p>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig3_winrate_compare.png" alt="胜率对比图">
+      <p class="caption"><b>扒穿胜率：</b>网传 96% 或牛市 70% 的话术很会讲，但固定规则落地后合计只有 7/36，约 19.4%。</p>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig4_trades_frequency.png" alt="触发次数对比图">
+      <p class="caption"><b>频率翻车：</b>如果每天可做应该接近 1423 次机会，实测只有 36 笔，样本量本身就撑不起“提款机”叙事。</p>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig5_control_group.png" alt="对照组图">
+      <p class="caption"><b>最狠一刀：</b>S1 信号和同合格池随机 2 只完全一致，说明这套信号没有选股 alpha；预筛池等权更像在赌隔夜分布。</p>
+    </section>
+
+    <section class="card image-card">
+      <img src="figs/fig6_gate1_verdict.png" alt="Gate1 判定表">
+      <p class="caption"><b>Gate1 盖章：</b>这不是主观唱衰，expectancy、profit factor、交易笔数、OOS 都没过，最终判定 FAIL。</p>
+    </section>
+
+    <section class="card">
+      <h2>你为什么能信这次实测 🛡️</h2>
+      <p style="font-size:19px;color:var(--muted);margin-bottom:14px">所有自媒体回测最致命的 4 个偏差，我都堵死了。</p>
+      <div class="design-list">
+        <div class="design-item"><b>PIT 无未来函数</b><span>D 日 14:50 生成信号时，只读 14:50 及之前 5min bar + D-1 及更早日线。代码里 <code>assert bar_time &lt;= cutoff</code> 运行时硬卡死，作弊一行就崩。</span></div>
+        <div class="design-item"><b>反幸存者</b><span>预筛池实际出现 155 只退市股（如 000005、000038、000150 等），不是只挑"活到 2026 的赢家"做样本，避免"过去看现在赢家"的虚假高胜率。</span></div>
+        <div class="design-item"><b>真实成本</b><span>佣金万 2.5 含 <b>5 元地板费</b>（小单杀手）、卖出印花税千 1、过户费、单边 0.2% 滑点。这是真把钱花在路上，不是教科书 0 成本回测。</span></div>
+        <div class="design-item"><b>固定规则 + OOS 隔离</b><span>策略参数全程未改，OOS（2024-10~2026-05）始终未参与调参，只在最后做最终裁决——避免"调到样本外好看为止"的 p-hacking。</span></div>
+      </div>
+      <p class="source">数据源：reports/s1_gate1.md lines 3-14, 58-67；configs/strategy.yaml s1_tail；configs/cost.yaml。代码 review 留痕见 reports/sanity_review.md 8 个检查点。</p>
+    </section>
+
+    <section class="card">
+      <h2>5 个关键发现</h2>
+      <div class="summary">
+        <div class="summary-row">1. 2020-07-01..2026-05-15 共 1423 个交易日，S1 只触发 36 笔。</div>
+        <div class="summary-row">2. 四段收益全负：bull -2.12%、bear -6.18%、range -6.11%、oos -7.52%。</div>
+        <div class="summary-row">3. 合计胜率 7/36≈19.4%，profit_factor 全部低于 0.21，离 1.3 门槛很远。</div>
+        <div class="summary-row">4. S1 信号 = 同候选池随机 2 只，不能证明独立选股 alpha。</div>
+        <div class="summary-row">5. 预筛池等权全买在四段分别为 -72.22%、-85.20%、-95.40%、-90.99%，尾盘追涨停隔夜的底层分布很差。</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>给散户的 3 条实操建议</h2>
+      <div class="advice-grid">
+        <div class="advice"><strong>先问 PIT</strong><span>任何尾盘法，先问有没有逐时点数据、有没有反幸存者、有没有样本外。</span></div>
+        <div class="advice"><strong>先做对照组</strong><span>必须看同候选随机、预筛池等权，别只看策略曲线好不好看。</span></div>
+        <div class="advice"><strong>先算成本</strong><span>小单、佣金地板、印花税、滑点都会吃掉“每天 1-3%”这种口号。</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>接下来这 6 期会发什么 📺</h2>
+      <p style="font-size:19px;color:var(--muted);margin-bottom:14px">
+        本质不是教你"学量化"，是教不懂编程的你用 AI 工具<b style="color:var(--red)">自己做出验证工具</b>——以后再有人喊"100万→1亿"你自己 30 分钟就能扒穿。
+      </p>
+      <div class="design-list">
+        <div class="design-item"><b>01</b><span>用 Claude Code + Codex 30 分钟搭一个属于你自己的回测框架（本期项目 light 版）</span></div>
+        <div class="design-item"><b>02</b><span>用 AI 写一个分析房贷的小工具——到底要不要提前还款，自己算清楚</span></div>
+        <div class="design-item"><b>03</b><span>30 分钟做一个"分析自己消费习惯"的 AI 助手（接账单/支付宝）</span></div>
+        <div class="design-item"><b>04</b><span>不写代码也能跑 Agent：每周读公众号自动总结+打分推送</span></div>
+        <div class="design-item"><b>05</b><span>下期量化反诈：扒穿"二八轮动 / 龙头打板 / 缠论"</span></div>
+        <div class="design-item"><b>06</b><span>零基础的"AI 编程 8 周陪跑大纲"（含每周实战项目）</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>关注我能得到什么 🎁</h2>
+      <p style="font-size: 24px; font-weight: 800; line-height:1.45">
+        <span style="color:var(--red)">AI 工程师</span> · 教不懂编程的你<br>用 AI <span style="color:var(--red)">自己做工具自己验证</span>
+      </p>
+      <p class="muted" style="margin-top: 14px;font-size:19px;line-height:1.7">
+        ✅ 每周一个 AI 实战项目（量化 / app / Agent）<br>
+        ✅ 不卖荐股、不接金融广告——这是死线<br>
+        ✅ 你少交一次智商税，我多一个学 AI 的朋友
+      </p>
+
+      <div style="margin-top:22px;padding:18px 20px;background:var(--soft-red);border-radius:20px">
+        <p style="font-size:22px;font-weight:900;color:var(--red);margin-bottom:10px">
+          📦 本期完整代码 + 数据 + 14 项判定表
+        </p>
+        <p style="font-size:18px;line-height:1.8">
+          👉 看我<b>主页简介</b>里那行 ⭐<br>
+          👉 关注后我会把 GitHub 仓库地址放在<b>主页置顶笔记</b>里<br>
+          👉 评论区扣「<b>扒穿</b>」我看到会私信你
+        </p>
+      </div>
+
+      <p style="margin-top: 18px; font-size: 22px; font-weight: 900; color: var(--red);">
+        ❤️ 三连+关注，下期带你 30 分钟手搓自己的回测框架
+      </p>
+      <p style="margin-top: 8px; font-size: 15px; color: var(--muted);">
+        💡 我各平台同名「小李的 AI 工厂」——B 站 / 知乎 / 微博 都能搜到我，干货长文在另一头
+      </p>
+    </section>
+  </main>
+</body>
+</html>

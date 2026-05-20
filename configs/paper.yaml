@@ -1,0 +1,20 @@
+# Paper trading harness configuration.
+# Cost/slippage remains in configs/cost.yaml only.
+
+initial_cash: 10000.0
+state_dir: "paper/state"
+forward_log_path: "paper/forward_log.csv"
+forward_status_path: "paper/forward_status.md"
+
+# Index proxy quantity is allowed to trade in units of 1 for paper/OOS proxy
+# readability; A-share S1 orders remain 100-share lots.
+lot_sizes:
+  s1_tail: 100
+  s3b_trend: 1
+
+# Production S1 universe. null means current full A-share universe from data
+# registry; a list can be used only for smoke/debug runs and must be reported.
+s1_universe: null
+s1_snapshot_workers: 32
+s1_snapshot_progress_every: 250
+s1_snapshot_refresh: false

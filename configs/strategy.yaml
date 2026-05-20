@@ -1,0 +1,54 @@
+# 三策略参数 —— 进入 Gate1 前可调；oos 验证阶段冻结。
+# 每个策略的 generate_signals 只能用 as_of 时点及之前的数据（point-in-time）。
+
+s1_tail:                 # 尾盘隔夜超短（杨永兴式）—— 集中型，实盘优先
+  enabled: true
+  decision_time: "14:50"           # 选股/下单时点（严禁用此刻之后数据）
+  pct_change_min: 0.03             # 当日涨幅下限（用14:50快照价 vs 昨收）
+  pct_change_max: 0.05             # 当日涨幅上限
+  volume_ratio_min: 1.0            # 量比 > 1
+  turnover_min: 0.05               # 换手率 5%
+  turnover_max: 0.10               # 换手率 10%
+  float_mv_max: 2.0e10             # 流通市值 < 200 亿
+  limit_up_lookback_days: 4        # 近4日内须有过涨停
+  require_above_vwap: true         # 分时全程在均价线上方（用≤14:50分钟线）
+  require_new_high_after_1430: true
+  max_positions: 2                 # 持仓上限（集中，便于手动/小资金）
+  sell_time: "open_next_day"       # 次日集合竞价/开盘无条件卖出
+
+s2_factor:               # 中低频多因子选股 —— 仅回测/模拟盘研究，不进早期手动实盘
+  enabled: true
+  rebalance: "weekly"
+  hold_n: 15                       # 等权持仓只数（10-20）
+  factors: ["mom_20", "mom_60", "vol_20", "turnover_20", "amount_20"]
+  model: "lightgbm"
+  research_only: true              # 标记：不进入手动实盘路径
+
+s3_momentum:             # 动量·趋势轮动 —— 集中型，实盘候选
+  enabled: true
+  universe_pool: "industry_etf"    # 行业ETF/龙头池（具体清单在 data 层定义）
+  lookback_days: 20                # 动量回看
+  top_k: 2                         # 持有动量最强 Top-K
+  trend_filter_ma: 60             # 仅持价在60日均线上方者，否则空仓
+  rebalance: "daily"
+
+s3b_trend:               # 时序趋势跟踪（绝对动量）—— 检查点2 机制证据驱动，预先注册
+  enabled: true
+  asset: "sh000300"                # 单一宽基代理（实盘换 510300 沪深300ETF）
+  ma_len: 200                      # 预注册经典长均线(Faber 10月≈200日)，默认值不调
+  ma_sensitivity: [100, 150, 200]  # 仅作稳健性展示，不用于选择，不碰 oos
+  rebalance: "daily_signal"        # 每日判信号，仅在穿越时换仓(低换手)
+  rule: "price>MA持有，否则空仓(现金,0收益)"
+  hold_when: "close > ma"
+
+s3c_trend_monthly:       # 终局唯一最终试验：Faber(2007) 经典月频规范，硬一次性
+  enabled: true
+  asset: "sh000300"                # 主证据另用 sh000001（更长）
+  signal_basis: "month_end_close"  # 仅用月末收盘判信号(Faber 原版)
+  ma_len_months: 10                # Faber SMA 10 个月（文献标准，先验非调参）
+  rebalance: "monthly"             # 月频，仅月末判、次月初成交
+  hold_when: "month_end_close > 10m_SMA"
+  # 这是 s3b 机制的文献标准参数化（Faber 已发表规范），非 OOS 派生。
+  # 硬承诺：仅运行 1 次，OOS 不调参，结果即定论，之后停止 backtest-hunting。
+  # 经济学先验：时序动量/趋势跟踪是数十年文献稳健效应，非本数据挖掘；
+  # 目标=低换手捕获正漂移 + 趋势止损压回撤，攻 S3/buy&hold 过不了的 bear/DD 闸门。

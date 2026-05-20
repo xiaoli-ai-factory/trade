@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A股量化交易方案尽调报告 · 东方财富环境适配</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1d212b; --line:#2a2f3a;
+    --txt:#e6e8ee; --sub:#9aa3b2; --accent:#4f9dff; --good:#3ecf8e;
+    --warn:#f5a623; --bad:#ef5b5b; --gold:#e8b339;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;padding:32px 18px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:28px;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
+  h2{font-size:21px;margin:38px 0 14px;padding-left:11px;border-left:4px solid var(--accent)}
+  h3{font-size:17px;margin:18px 0 8px;color:#fff}
+  p,li{color:var(--txt);font-size:14.5px}
+  .sub{color:var(--sub);font-size:13px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:14px 0}
+  .disclaimer{background:linear-gradient(180deg,#2a1c1c,#1d1517);border:1px solid #5a2e2e;border-radius:12px;padding:18px 22px;margin:18px 0}
+  .disclaimer strong{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--card2);color:#fff;font-weight:600}
+  tr:nth-child(even) td{background:#14171e}
+  .tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;margin:2px 4px 2px 0}
+  .t-good{background:rgba(62,207,142,.15);color:var(--good);border:1px solid rgba(62,207,142,.4)}
+  .t-warn{background:rgba(245,166,35,.15);color:var(--warn);border:1px solid rgba(245,166,35,.4)}
+  .t-bad{background:rgba(239,91,91,.15);color:var(--bad);border:1px solid rgba(239,91,91,.4)}
+  .t-info{background:rgba(79,157,255,.15);color:var(--accent);border:1px solid rgba(79,157,255,.4)}
+  .star{color:var(--gold);letter-spacing:2px}
+  .muted-star{color:#3a3f4b;letter-spacing:2px}
+  ul{margin:8px 0 8px 20px}
+  li{margin:4px 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .kv{font-size:13.5px;margin:5px 0}
+  .kv b{color:var(--accent);display:inline-block;min-width:96px}
+  code{background:#0a0c10;padding:1px 6px;border-radius:4px;font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;color:#9ad}
+  .hl{background:rgba(232,179,57,.12);border:1px solid rgba(232,179,57,.35);border-radius:10px;padding:14px 18px;margin:12px 0}
+  .footnote{color:var(--sub);font-size:12px;border-top:1px solid var(--line);margin-top:30px;padding-top:14px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .num{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>A股量化交易方案尽调报告</h1>
+  <div class="meta">尽调对象：东方财富 A股账户 · T+1 · 手续费约万2.5 ｜ 报告日期：2026-05-18 ｜ 性质：投资前技术与策略尽职调查（非投资建议）</div>
+
+  <div class="disclaimer">
+    <strong>⚠ 必读风险声明</strong>
+    <p style="margin-top:6px">本报告中的"盈利概率""收益率"等数字，<strong>绝大多数来自策略作者、自媒体或营销文案，未经独立、扣费、含滑点的严谨回测</strong>。A股短线 alpha 在 2023 年后量化普及下衰减严重，<strong>历史表现不代表未来</strong>。任何标注"胜率96%""100万变1亿"的说法在尽调中一律视为<strong>未证实营销话术</strong>，不能作为下注依据。本报告的价值在于：帮你筛掉不适配的工具、定位真正能在你环境跑起来的框架、并给出"先回测证伪、再小资金验证"的落地路径。</p>
+  </div>
+
+  <h2>一、你的交易环境画像（适配基准）</h2>
+  <div class="card">
+    <div class="kv"><b>券商/客户端</b>东方财富（A股）— 决定了"实盘下单"只能走客户端GUI自动化或QMT，而非标准API</div>
+    <div class="kv"><b>交易制度</b>T+1（当日买入次日才能卖）+ 涨跌停 + 集合竞价 — 决定了日内回转受限，隔夜风险不可回避</div>
+    <div class="kv"><b>手续费</b>约万2.5（双边约万5）+ 卖出印花税千1 + 过户费 — 单次往返成本约 <span class="num">0.13%~0.15%</span></div>
+    <div class="kv"><b>关键约束</b>东方财富对小资金账户<strong>通常不开放官方QMT/Ptrade量化接口</strong>（多数营业部门槛≈50万资产），因此散户量化在你的环境里 = <strong>客户端界面自动化</strong>路线</div>
+    <div class="kv"><b>成本含义</b>你的手续费友好，但每笔往返 ≈0.15% 是策略的"生死线"：尾盘隔日打法目标收益仅1%~3%，<strong>成本吃掉收益的 5%~15%</strong>，回测必须如实计入</div>
+  </div>
+
+  <h2>二、候选方案总览对比</h2>
+  <div class="card">
+  <table>
+    <tr>
+      <th>方案</th><th>类型</th><th>GitHub热度</th><th>对你环境适配度</th><th>盈利原理</th><th>盈利可行性*</th><th>实操难度</th>
+    </tr>
+    <tr>
+      <td><b>pytrader</b><br><span class="sub">jadepeng</span></td>
+      <td>执行框架</td>
+      <td>★☆ 中低<br><span class="sub">~455 star</span></td>
+      <td><span class="star">★★★★★</span><br><span class="t-good tag">原生支持东方财富</span></td>
+      <td>本身不产生 alpha，是"下单的手"，配策略才盈利</td>
+      <td>取决于所配策略</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td><b>easytrader</b><br><span class="sub">shidenggui</span></td>
+      <td>下单底层库</td>
+      <td>★★★ 高<br><span class="sub">万级 star</span></td>
+      <td><span class="star">★★★</span><span class="muted-star">★★</span><br><span class="t-warn tag">主线已转向同花顺/miniqmt</span></td>
+      <td>同上，纯执行通道</td>
+      <td>取决于所配策略</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td><b>Microsoft Qlib</b></td>
+      <td>AI研究/回测脑</td>
+      <td><span class="star">★★★★★</span><br><span class="sub">~4万 star</span></td>
+      <td><span class="star">★★★</span><span class="muted-star">★★</span><br><span class="t-info tag">A股数据齐，无东财实盘</span></td>
+      <td>机器学习挖因子→选股组合，工业级回测</td>
+      <td>研究级最高，需自接执行</td>
+      <td>高</td>
+    </tr>
+    <tr>
+      <td><b>杨永兴尾盘法</b><br><span class="sub">（方法论，非repo）</span></td>
+      <td>人工短线策略</td>
+      <td><span class="t-bad tag">无专属高星repo</span></td>
+      <td><span class="star">★★★★</span><br><span class="sub">规则可量化，T+1天然适配</span></td>
+      <td>尾盘潜伏强势股，赌次日早盘主力诱多惯性</td>
+      <td><span class="t-bad tag">未经严谨验证</span></td>
+      <td>低（人工）/ 中（自动化）</td>
+    </tr>
+    <tr>
+      <td><b>backtrader</b></td>
+      <td>回测引擎</td>
+      <td><span class="star">★★★★</span><br><span class="sub">万级 star</span></td>
+      <td><span class="star">★★★</span><span class="muted-star">★★</span><br><span class="sub">通用回测，无东财实盘</span></td>
+      <td>验证策略用，不直接盈利</td>
+      <td>验证工具</td>
+      <td>中低</td>
+    </tr>
+    <tr>
+      <td><b>vnpy</b></td>
+      <td>全栈交易平台</td>
+      <td><span class="star">★★★★★</span><br><span class="sub">2万+ star</span></td>
+      <td><span class="muted-star">★★</span><span class="star">★★</span><br><span class="t-warn tag">A股实盘需QMT门槛</span></td>
+      <td>偏期货/CTA，A股实盘依赖miniqmt</td>
+      <td>不适配小散A股</td>
+      <td>高</td>
+    </tr>
+    <tr>
+      <td><b>abu / Rockyzsu/stock</b></td>
+      <td>A股策略集</td>
+      <td><span class="star">★★★★</span><br><span class="sub">万级 / 千级</span></td>
+      <td><span class="star">★★★</span><span class="muted-star">★★</span><br><span class="t-warn tag">基本停更</span></td>
+      <td>含多种A股短线/打板策略思路</td>
+      <td>思路参考，需重写</td>
+      <td>中</td>
+    </tr>
+  </table>
+  <p class="sub">* "盈利可行性"指<strong>在你环境跑通+扣费后仍有正期望的可能性</strong>，非营销胜率。所有执行框架本身不产生收益，盈利 = 策略质量 × 执行质量 × 成本控制。</p>
+  </div>
+
+  <div class="hl">
+  <b>尽调核心结论（先看这段）：</b>
+  <ul>
+    <li><b>没有</b>以"杨永兴"命名的高星 GitHub 量化 repo。该方法是<strong>可被量化的民间短线战法</strong>，散见于通达信公式、CSDN、BigQuant 文章，需你自己复现+回测。</li>
+    <li>最贴合你"东方财富实盘"的工具是 <b>pytrader</b>（原生 <code>broker='eastmoney'</code>）或 <b>easytrader 旧版/fork</b>——它们是"手"，不是"脑"。</li>
+    <li>最强的"脑"是 <b>微软 Qlib</b>（AI 选因子+工业级回测），但它不连东财，需用 pytrader/easytrader 做执行桥。</li>
+    <li>推荐落地架构：<b>数据(akshare) → 信号脑(Qlib 或 自研尾盘规则) → 严谨回测(backtrader/Qlib) → 执行手(pytrader→东方财富) → 小资金验证</b>。</li>
+    <li>对杨永兴尾盘法的诚实判断：<strong>逻辑成立但 alpha 大概率已衰减，在自己跑出"扣费含滑点、含跌停无法卖出、样本外"回测前，按投机对待，不可上真金</strong>。</li>
+  </ul>
+  </div>
+
+  <h2>三、重点尽调：杨永兴"尾盘买入·隔日卖出"方法</h2>
+
+  <div class="card">
+    <h3>3.1 方法背景与逻辑</h3>
+    <p>杨永兴为第一、二届私募冠军，公开宣传"16个月100万→1亿"。核心打法："一夜持股法"——下午约 <b>14:30 之后</b>选股买入，次日 <b>集合竞价/开盘第一时间无条件卖出</b>，单次目标收益 <b>1%~3%</b>，持股时间（交易时段）不超过约2小时。</p>
+    <p><b>盈利原理：</b>① 尾盘买入时当日波动基本结束，规避盘中过山车；② 利用 T+1：尾盘锁仓的强势股，次日主力常以高开/早盘拉升<strong>诱多</strong>，散户在诱多瞬间出货，赚的是"隔夜情绪惯性 + 次日早盘动量"；③ 机械纪律，不赌方向赌概率。</p>
+  </div>
+
+  <div class="card">
+    <h3>3.2 可量化规则（已从公开资料整理为可编程条件）</h3>
+    <table>
+      <tr><th>维度</th><th>条件</th><th>编程化判据</th></tr>
+      <tr><td>当日涨幅</td><td>3% ~ 5%</td><td><code>0.03 ≤ pct_chg ≤ 0.05</code></td></tr>
+      <tr><td>近期强度</td><td>过去3~4日内有涨停</td><td><code>max(pct_chg[-4:]) ≥ 0.097</code></td></tr>
+      <tr><td>流通市值</td><td>排除 &gt; 200亿</td><td><code>float_mv &lt; 2e10</code></td></tr>
+      <tr><td>量比</td><td>&gt; 1</td><td><code>volume_ratio &gt; 1</code></td></tr>
+      <tr><td>换手率</td><td>5% ~ 10%</td><td><code>0.05 ≤ turnover ≤ 0.10</code></td></tr>
+      <tr><td>分时形态</td><td>全天在均价线上；14:30后创新高；回踩不破均价线</td><td>分钟线：<code>close &gt; vwap</code> 持续 + 尾盘新高</td></tr>
+      <tr><td>买入时点</td><td>14:30 之后（实操常 14:50±）</td><td>定时任务 14:48~14:55 扫描下单</td></tr>
+      <tr><td>卖出时点</td><td>次日集合竞价 / 开盘瞬间，无条件</td><td>09:25 集合竞价挂单 或 09:30:00 市价</td></tr>
+    </table>
+    <p class="sub">注：原方法<strong>未给出止盈止损数字</strong>，硬规则是"次日开盘无条件平"。可叠加保护：开盘即走，不留盘中。</p>
+  </div>
+
+  <div class="card">
+    <h3>3.3 反方观点与证伪要点（按异常检测纪律 D：强制列反假设）</h3>
+    <table>
+      <tr><th>反假设</th><th>说明 / 必须用回测证伪</th></tr>
+      <tr><td><span class="t-bad tag">数据测量口径错</span></td><td>"涨幅3-5%、量比、换手"很多是<strong>盘中实时值</strong>，14:50 时点的值≠收盘值，回测若用收盘值=未来函数，胜率虚高。必须用<strong>14:50 时点的分钟快照</strong>回测。</td></tr>
+      <tr><td><span class="t-bad tag">幸存者/牛市偏差</span></td><td>"100万变1亿"发生在 2006-2007 大牛市，杠杆+牛市 beta，<strong>非策略 alpha</strong>。震荡市/熊市次日低开概率大幅上升。</td></tr>
+      <tr><td><span class="t-bad tag">流动性陷阱</span></td><td>次日"无条件卖"遇低开/一字跌停 → <strong>卖不掉</strong>。营销回测几乎都忽略"跌停无法成交"，这是最大杀伤。</td></tr>
+      <tr><td><span class="t-bad tag">成本侵蚀</span></td><td>目标收益仅1-3%，往返成本≈0.15%，集合竞价滑点+冲击成本可再吃 0.2-0.5%。<strong>扣费后期望可能转负</strong>。</td></tr>
+      <tr><td><span class="t-bad tag">Alpha 衰减</span></td><td>该战法广为流传+量化普及，"尾盘强势→次日诱多"被大量资金提前博弈，2024-2026 边际效应显著递减。</td></tr>
+      <tr><td><span class="t-warn tag">营销数据不可信</span></td><td>"胜率96%"无样本外、无扣费、无回撤；另一篇1000笔实测仅称均值约2.5%且"部分严重亏损"、未给胜率/回撤/扣费净值——<strong>等于没有有效验证</strong>。</td></tr>
+    </table>
+    <p><b>证伪实验设计（上真金前必须做）：</b>用 akshare 取2018-2026分钟数据 → 14:50快照选股 → 次日开盘价卖出（跌停日标记为无法卖出、按跌停价或顺延）→ 扣双边万5+印花税+0.3%滑点 → 分牛/熊/震荡三段统计胜率、盈亏比、最大回撤、样本外。<strong>三段都正期望才算通过。</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>3.4 在你环境的落地路线（人工 → 半自动 → 全自动）</h3>
+    <div class="kv"><b>阶段0 回测</b>akshare + backtrader/Qlib 复现3.2规则，按3.3证伪 — <span class="t-warn tag">不通过则放弃</span></div>
+    <div class="kv"><b>阶段1 人工</b>用通达信/同花顺"问财"或自写 akshare 脚本，每日14:48推送候选股，手动在东方财富下单（验证真实滑点）</div>
+    <div class="kv"><b>阶段2 半自动</b>脚本选股 → 推送 → 你确认 → pytrader 调东方财富客户端下单</div>
+    <div class="kv"><b>阶段3 全自动</b>pytrader 定时14:50扫描+下单，次日09:25集合竞价挂单卖出；小资金（1-3万）跑≥2个月样本外</div>
+  </div>
+
+  <h2>四、各框架详细尽调卡片</h2>
+
+  <div class="grid">
+    <div class="card">
+      <h3>① pytrader <span class="t-good tag">环境最佳匹配</span></h3>
+      <div class="kv"><b>定位</b>基于 easytrader+easyquotation 的A股自动交易框架，<strong>原生 broker='eastmoney'</strong></div>
+      <div class="kv"><b>所需环境</b>Windows + 东方财富PC客户端 + Python3 + TA-Lib + tushare/jqdata 数据</div>
+      <div class="kv"><b>适配度</b><span class="star">★★★★★</span> 直接对接你的东方财富，含简单回测+Web看板</div>
+      <div class="kv"><b>盈利原理</b>自身是执行层，继承 StrategyTemplate 写策略（可装尾盘法）</div>
+      <div class="kv"><b>盈利概率</b>框架≈中性；取决于策略+回测纪律</div>
+      <div class="kv"><b>风险</b>~455 star、更新少；客户端GUI自动化随东财改版易失效，需盯维护</div>
+    </div>
+
+    <div class="card">
+      <h3>② easytrader <span class="t-warn tag">需选对版本</span></h3>
+      <div class="kv"><b>定位</b>最知名的券商客户端自动下单底层库</div>
+      <div class="kv"><b>所需环境</b>Windows + 客户端；<strong>主线现主推同花顺客户端/miniqmt/雪球</strong></div>
+      <div class="kv"><b>适配度</b><span class="star">★★★</span><span class="muted-star">★★</span> 东财支持在主线被弱化，需用支持东财的 fork 或经同花顺通道</div>
+      <div class="kv"><b>盈利原理</b>纯执行通道</div>
+      <div class="kv"><b>盈利概率</b>取决于策略</div>
+      <div class="kv"><b>风险</b>东财直连不稳；建议用 pytrader 封装，或改走"东财行情+同花顺下单"</div>
+    </div>
+
+    <div class="card">
+      <h3>③ Microsoft Qlib <span class="t-info tag">最强信号脑</span></h3>
+      <div class="kv"><b>定位</b>~4万 star 工业级AI量化平台，含因子→模型→回测全链路，A股数据齐全</div>
+      <div class="kv"><b>所需环境</b>Python + 较强机器，需准备A股日/分钟数据</div>
+      <div class="kv"><b>适配度</b><span class="star">★★★</span><span class="muted-star">★★</span> 研究/回测无敌，<strong>不连东方财富实盘</strong>，须自接执行桥</div>
+      <div class="kv"><b>盈利原理</b>ML（LightGBM/Transformer等）挖因子做多因子选股+组合优化</div>
+      <div class="kv"><b>盈利概率</b>研究级最高，但偏中低频组合，与"尾盘超短"风格不同；适合做选股池</div>
+      <div class="kv"><b>风险</b>学习曲线陡；过拟合风险高，需严格样本外</div>
+    </div>
+
+    <div class="card">
+      <h3>④ backtrader <span class="t-info tag">验证工具</span></h3>
+      <div class="kv"><b>定位</b>成熟通用回测引擎，社区大、文档全</div>
+      <div class="kv"><b>所需环境</b>Python；自接 akshare/tushare 数据</div>
+      <div class="kv"><b>适配度</b><span class="star">★★★</span><span class="muted-star">★★</span> 用于<strong>证伪尾盘法</strong>最合适，灵活控制成本/滑点/T+1</div>
+      <div class="kv"><b>盈利原理</b>不直接盈利，是"上真金前的安检门"</div>
+      <div class="kv"><b>建议</b>务必自定义佣金=万2.5、卖出印花税千1、滑点≥0.2%、跌停不可成交</div>
+    </div>
+
+    <div class="card">
+      <h3>⑤ vnpy <span class="t-warn tag">门槛不匹配</span></h3>
+      <div class="kv"><b>定位</b>2万+ star 全栈交易平台，期货/CTA强</div>
+      <div class="kv"><b>适配度</b><span class="muted-star">★★</span><span class="star">★★</span> A股实盘走 miniqmt/QMT，<strong>多数营业部需≈50万资产</strong>，与东财散户路线冲突</div>
+      <div class="kv"><b>结论</b>资金达QMT门槛或做期货再考虑，否则<strong>不建议</strong>用于当前场景</div>
+    </div>
+
+    <div class="card">
+      <h3>⑥ abu / Rockyzsu/stock <span class="t-warn tag">思路参考</span></h3>
+      <div class="kv"><b>定位</b>万级star的A股量化系统/30天量化教程，含打板、短线策略思路</div>
+      <div class="kv"><b>适配度</b><span class="star">★★★</span><span class="muted-star">★★</span> 基本停更，依赖旧；当<strong>策略思路库</strong>读，不直接用</div>
+      <div class="kv"><b>价值</b>打板/龙头战法与尾盘法逻辑相通，可借鉴选股因子</div>
+    </div>
+  </div>
+
+  <h2>五、推荐落地架构与实施 Roadmap</h2>
+  <div class="card">
+    <h3>推荐组合：脑手分离</h3>
+    <p><b>数据层</b> akshare（免费、A股全、含分钟）/ 备用 tushare、adata<br>
+    <b>信号脑</b> 先用"自研尾盘规则"（贴合你的想法、可解释）；行有余力再叠 Qlib 因子做选股池过滤<br>
+    <b>回测安检</b> backtrader（含费/滑点/T+1/跌停约束）或 Qlib 回测<br>
+    <b>执行手</b> pytrader → 东方财富客户端（或 easytrader 经同花顺通道）<br>
+    <b>验证</b> 1-3万小资金、≥2个月样本外、与回测对账滑点</p>
+  </div>
+  <div class="card">
+    <table>
+      <tr><th>周次</th><th>任务</th><th>通过标准（不达标即停）</th></tr>
+      <tr><td>W1</td><td>akshare 拉 2018-2026 分钟数据，复现3.2尾盘规则选股</td><td>选股逻辑用14:50快照、无未来函数</td></tr>
+      <tr><td>W2</td><td>backtrader 回测，扣万2.5+印花税+0.3%滑点+跌停不可卖</td><td>牛/熊/震荡三段分别统计</td></tr>
+      <tr><td>W3</td><td>样本外（最近6个月不参与调参）验证</td><td><strong>三段+样本外均正期望、最大回撤可接受</strong></td></tr>
+      <tr><td>W4</td><td>pytrader 接东方财富，模拟/极小额下单跑通链路</td><td>下单成功率、实际滑点≈回测假设</td></tr>
+      <tr><td>W5-W12</td><td>1-3万真实小资金跑，每日对账</td><td>实盘曲线与回测偏离 &lt; 设定阈值才可加仓</td></tr>
+    </table>
+  </div>
+
+  <h2>六、尽调最终判断</h2>
+  <div class="hl">
+    <ul>
+      <li><b>工具层（高确定性）：</b>你的环境最优执行方案 = <code>pytrader</code> 接东方财富；信号研究脑 = <code>Qlib</code>；回测安检 = <code>backtrader</code>。这三件套技术上完全可在你环境跑通。</li>
+      <li><b>策略层（高不确定性）：</b>杨永兴尾盘法<strong>逻辑自洽、规则可量化、与T+1天然契合</strong>，是值得投入回测的方向；但"高胜率/暴利"是营销话术，<strong>真实 alpha 是否仍存在、扣费后是否正期望，必须由你自己的严谨回测回答</strong>。</li>
+      <li><b>大概率能盈利的策略不存在"现成答案"</b>——开源世界给的是"脑+手+安检"，<strong>能否盈利取决于你是否用反假设纪律把这套尾盘法证伪/证真</strong>。先做W1-W3回测，不通过就换方向，这本身就是最大的风险控制。</li>
+    </ul>
+  </div>
+
+  <div class="footnote">
+    主要信息来源：GitHub（jadepeng/pytrader、shidenggui/easytrader、microsoft/Qlib、vnpy/vnpy、bbfamily/abu、Rockyzsu/stock）、BigQuant 量化Wiki、CSDN 尾盘买入法实测文、知乎/东方财富财富号杨永兴相关报道。报告数据多为公开二手资料，未独立复核；<strong>本报告为技术尽调，不构成任何投资建议，据此交易风险自负</strong>。
+  </div>
+
+</div>
+</body>
+</html>

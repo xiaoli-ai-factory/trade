@@ -1,0 +1,14 @@
+# 追加策略：二八轮动（M3-S4）
+s4_erba_rotation:
+  enabled: true
+  pool:
+    - { code: "sh000300", name: "沪深300", etf_code: "510300", etf_name: "沪深300ETF" }
+    - { code: "sh000905", name: "中证500", etf_code: "510500", etf_name: "中证500ETF" }
+  signal_basis: "month_end_close"   # 月末判信号
+  lookback_days: 20                  # 动量回看（预注册经典值，不调）
+  rebalance: "monthly"               # 月频
+  rule: "选 lookback_days 收益最高者持有；trend filter 可选"
+  trend_filter_ma: null              # 默认无 trend filter，敏感性单独跑
+  allow_cash: false                  # 经典版总在二者之一中（不进现金）
+  # 经济学先验：A股大小盘风格切换有不同行情驱动(大盘=机构定价/小盘=流动性)，
+  # 简单动量轮动是经典叙事。非数据挖掘。

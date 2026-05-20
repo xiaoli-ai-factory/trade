@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>用 BaoStock 5min PIT 实测杨永兴尾盘法：1423天，36笔，全段亏损——附完整代码与防作弊纪律</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --sub:#646464; --line:#e6e6e6; --bg:#fff;
+    --link:#175199; --quote:#f6f6f6; --code-bg:#f5f7fa; --accent:#2e74e5;
+    --red:#d62828; --green:#2a7a3e; --warn:#d9722c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink)}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+    font-size:17px; line-height:1.78; padding:38px 18px 80px;
+  }
+  .container{max-width:780px;margin:0 auto}
+  h1{font-size:30px;line-height:1.35;font-weight:700;margin:0 0 14px;letter-spacing:.2px}
+  .meta{color:var(--sub);font-size:14px;margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink)}
+  h2{font-size:22px;font-weight:700;margin:42px 0 14px;line-height:1.4;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+  h3{font-size:18px;font-weight:700;margin:26px 0 10px}
+  p{margin:14px 0}
+  a{color:var(--link);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--link)}
+  blockquote.tldr{
+    background:linear-gradient(180deg,#fffbe7,#fff8d4);
+    border-left:5px solid #f0b800;
+    margin:22px 0;padding:18px 22px;border-radius:6px;color:#2a2a2a;font-size:16px
+  }
+  blockquote.tldr b{color:#a87b00}
+  blockquote{
+    background:var(--quote);border-left:4px solid #c8c8c8;
+    margin:18px 0;padding:14px 20px;color:#404040;font-size:16px
+  }
+  code{background:var(--code-bg);padding:1.5px 6px;border-radius:4px;font-family:"SF Mono","Monaco","Consolas",monospace;font-size:14.5px;color:#c0392b}
+  pre{background:var(--code-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;font-size:14px;line-height:1.6;border:1px solid #e8ebf0}
+  pre code{background:none;padding:0;color:#2c3e50}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:15px}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:#fafafa;font-weight:700}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .fail{color:var(--red);font-weight:700}
+  .pass{color:var(--green);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .fig{margin:24px 0;text-align:center}
+  .fig img{max-width:100%;border:1px solid var(--line);border-radius:4px}
+  .fig figcaption{color:var(--sub);font-size:14px;margin-top:8px}
+  .callout{
+    background:#eef4fb;border:1px solid #cfe0f6;border-radius:8px;
+    padding:16px 20px;margin:20px 0;font-size:15.5px
+  }
+  .callout b{color:#175199}
+  .danger{background:#fde9e9;border-color:#f4b8b8}
+  .danger b{color:#a32424}
+  .author{
+    margin-top:60px;padding:26px 28px;background:#fafafa;border:1px solid var(--line);border-radius:10px
+  }
+  .author h2{border:none;margin-top:0}
+  .author .signature{
+    background:#fff;border-left:4px solid var(--link);
+    padding:12px 16px;margin:14px 0;font-size:15.5px;color:#2c3e50
+  }
+  .cta-box{
+    background:linear-gradient(135deg,#eaf3ff,#f3edff);
+    border:1px solid #c6d8f7;border-radius:10px;padding:22px 24px;margin:28px 0
+  }
+  .cta-box h3{margin-top:0;color:#175199}
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  @media(max-width:640px){.cta-grid{grid-template-columns:1fr}}
+  .cta-item{background:#fff;border:1px solid #e0e6ee;border-radius:8px;padding:12px 14px;font-size:14.5px}
+  .cta-item b{color:#175199}
+  .toc{
+    background:#fafafa;border:1px solid var(--line);border-radius:8px;
+    padding:18px 22px;margin:24px 0;font-size:15px
+  }
+  .toc h3{margin-top:0}
+  .toc ol{margin:8px 0 0 20px;padding:0}
+  .toc li{margin:5px 0}
+  .footnote{color:var(--sub);font-size:13px;border-top:1px solid var(--line);margin-top:36px;padding-top:14px}
+  .roadmap{display:grid;grid-template-columns:60px 1fr;gap:10px 16px;margin:12px 0}
+  .roadmap .ep{font-weight:700;color:var(--link)}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>用 BaoStock 5min PIT 实测杨永兴尾盘法：1423天，36笔，全段亏损——附完整代码与防作弊纪律</h1>
+  <div class="meta">
+    <b>作者：小李的 AI 工厂</b> · AI 工程师 · 量化 / app / Agent 实战
+    <br>2026-05-20 · 全文约 5800 字，含代码片段，预计阅读 15 分钟
+  </div>
+
+  <blockquote class="tldr">
+    <b>⚡ TL;DR</b><br>
+    我用 BaoStock 5 分钟 K 线 + 严格无未来函数 + 含 155 只退市股 + 真实成本（佣金万 2.5 含 5 元地板费 + 印花税 + 0.2% 滑点），对网传"100 万 16 个月做到 1 亿"的杨永兴尾盘买入法跑了 1423 个交易日（2020-07-01 ~ 2026-05-15）的固定规则回测。
+    <br><br>
+    结果：<b>6 年仅触发 36 笔，bull -2.12% / bear -6.18% / range -6.11% / oos -7.52% 每段全亏，合计胜率 19.4%</b>，profit factor 全部低于 0.21，Gate1 验收 FAIL。
+    <br><br>
+    更关键的发现：<b>S1 信号与"在同合格池随机选 2 只"完全一致</b>——这套尾盘选股规则本身没有独立的 alpha。所谓"96% 胜率"主要来自三个污染源：未来函数（用 D 日收盘价倒推 14:50 决策）+ 幸存者偏差（只用今天还活着的股票）+ 牛市 beta（2006-2007 杠杆牛的不可复现叙事）。
+    <br><br>
+    完整代码、数据、14 项 Gate1 判定表、8 个 sanity_review 检查点全部公开（文末获取方式）。
+  </blockquote>
+
+  <div class="toc">
+    <h3>目录</h3>
+    <ol>
+      <li>起因：差点把 1 万本金交给一个口口相传的"提款机"</li>
+      <li>方法论：把回测做对，必须堵死 4 个偏差</li>
+      <li>实测结果：1423 天、36 笔、全段亏</li>
+      <li>归因：96% 胜率是怎么伪造出来的</li>
+      <li>对照组：S1 信号 vs 随机选股 完全一致</li>
+      <li>Gate1 14 项验收：A+B+C 全 FAIL</li>
+      <li>唯一被部分验证的真 edge：趋势型熊市防御</li>
+      <li>给散户的 4 条实操建议</li>
+      <li>更大的话题：AI 工程师视角下，普通人为什么需要"自己验证"的能力</li>
+      <li>关于我 / 公众号 / 后续 6 期内容</li>
+    </ol>
+  </div>
+
+  <h2>1. 起因：差点把 1 万本金交给一个口口相传的"提款机"</h2>
+
+  <p>最近几个月，小红书、知乎、抖音上反复刷到一类内容：</p>
+
+  <blockquote>
+    "杨永兴一夜持股法：下午 2:50 选股、次日开盘卖、胜率 96%、100 万 16 个月做到 1 亿"
+  </blockquote>
+
+  <p>故事讲得很完整：杨永兴是早期私募冠军，在 2006-2007 年那波牛市，靠"尾盘买入次日卖出"的固定打法，把 100 万滚到了 1 亿。规则简洁到能写在一张便签上：</p>
+
+  <ul>
+    <li>下午 14:50 选股，条件：当日涨幅 3-5%、量比 &gt;1、换手 5-10%、流通市值 &lt;200 亿、近 4 日内有过涨停、分时全程在均价线上方、14:30 后创新高</li>
+    <li>次日开盘无条件卖出</li>
+    <li>单次目标收益 1-3%</li>
+  </ul>
+
+  <p>我做 AI 量化和工程出身，看到"96% 胜率"第一反应是怀疑，但坦白说我也心动——计划用 1 万本金小额跑 2 个月看看。直到我想：<b>所有自媒体回测都说自己是"实测"，但他们的回测代码我一行没见过。</b></p>
+
+  <p>于是我决定亲手做一次。这篇文章是完整复盘。</p>
+
+  <h2>2. 方法论：把回测做对，必须堵死 4 个偏差</h2>
+
+  <p>在贴数字之前，先讲清楚我做了什么、堵了哪些雷。如果你跳过这节直接看结果，本文你只能信一半——因为<b>市面上 90% 的"高胜率回测"是被以下 4 个偏差合谋伪造出来的</b>，不堵死就没有意义。</p>
+
+  <h3>偏差 1：未来函数（look-ahead bias）—— 最致命</h3>
+
+  <p>在 14:50 做决策，能用的数据就只能截止到 14:50。但大量自媒体的"回测"是这么做的：</p>
+
+  <pre><code># ❌ 典型作弊回测
+df = read_daily_data()
+df['signal'] = (df['pct_chg'] &gt; 0.03) &amp; (df['pct_chg'] &lt; 0.05) &amp; (df['turnover'] &gt; 0.05) ...
+df['next_day_return'] = df['open'].shift(-1) / df['close'] - 1
+# 然后聚合 signal=True 的 next_day_return,得到漂亮的胜率
+</code></pre>
+
+  <p>问题在 <code>df['pct_chg']</code>：这个值是用 <b>D 日收盘价</b>算的，而决策是在 D 日 14:50——14:50 时还不知道收盘价是多少。这相当于用未来 10 分钟的信息选股。</p>
+
+  <p>我的做法是用 BaoStock 5min K 线，对每一根 5 分钟 bar 加运行时硬断言：</p>
+
+  <pre><code># ✅ PIT 强制
+def get_intraday_snapshot(date, cutoff="14:50"):
+    bars = baostock.query_history_k_data_plus(...)
+    cutoff_ts = pd.Timestamp(f"{date} {cutoff}:00")
+    bars = bars[bars['timestamp'] &lt;= cutoff_ts]
+    assert bars['timestamp'].max() &lt;= cutoff_ts  # 一行作弊就崩
+    return bars
+</code></pre>
+
+  <p>所有 pct_chg、量比、换手率、VWAP、14:30 后是否创新高，全部用 14:50 及以前的 bar 重算。所有日线特征（流通市值、近 4 日是否涨停、前收盘价）只用 D-1 及更早的数据 <code>.shift(1)</code>。</p>
+
+  <h3>偏差 2：幸存者偏差（survivorship bias）</h3>
+
+  <p>另一个常见做法：用"今天还在交易的股票池"去回测过去。但 2020 年存在的股票，到 2026 年有的退市了。如果回测池只用 2026 还活着的股票，你天然挑了"赢家"——胜率虚高 5-15%。</p>
+
+  <p>我的预筛池显式包含 155 只在回测期间退市的股票（如 000005、000038、000150 等），它们在退市前的日子参与候选，退市后自然出池。证据见 <code>reports/s1_gate1.md</code> 第 11 行。</p>
+
+  <h3>偏差 3：成本低估</h3>
+
+  <p>"目标收益 1-3%"听起来不大，但 A 股小账户散户的真实往返成本能吃掉一半以上：</p>
+
+  <pre><code>买入成本 = max(成交额 × 万2.5, 5元) + 成交额 × 万0.1
+卖出成本 = max(成交额 × 万2.5, 5元) + 成交额 × 万0.1 + 成交额 × 千1（印花税）
+滑点    = 基准价 × (1 ± 0.2%)（双边）
+</code></pre>
+
+  <p>关键是<b>东方财富等多数券商的单笔佣金最低 5 元</b>（地板费）。3000 元小单 → 5 元地板 = 单边 0.17%，往返加印花税和滑点合计 0.5%。目标收益 1-3%，<b>成本占比 17%-50%</b>，回测漏掉地板费就是系统性高估。</p>
+
+  <h3>偏差 4：OOS 调参（p-hacking）</h3>
+
+  <p>很多人会调参直到样本外曲线变好为止——这等于把样本外变成了样本内，OOS 失去意义。</p>
+
+  <p>我把 2024-10-01 ~ 2026-05-15 这段（约 1.5 年）从一开始就锁定为 OOS，<b>regulation 上不允许任何参数选择基于 OOS 表现</b>。这个纪律保存在 <code>reports/sanity_review.md</code> 8 个检查点里，所有调参/不调参决策书面留痕。</p>
+
+  <div class="callout">
+    <b>方法论小结</b>：PIT 无未来函数 + 反幸存者 + 真实成本（含 5 元地板）+ OOS 隔离。这 4 条不全做到，"高胜率"基本都是伪造。我对自己代码也按这个标准 review 了一遍，留下了 8 个 sanity_review 检查点。
+  </div>
+
+  <h2>3. 实测结果：1423 天、36 笔、全段亏</h2>
+
+  <p>固定规则、不调参、按 <code>configs/strategy.yaml</code> 的 <code>s1_tail</code> 原始参数跑全期：</p>
+
+  <table>
+    <tr><th>区间</th><th>类型</th><th class="num">收益</th><th class="num">最大回撤</th><th class="num">触发笔数</th><th class="num">胜率</th><th class="num">profit factor</th></tr>
+    <tr><td>2020-07 ~ 2021-02</td><td>bull</td><td class="num fail">-2.12%</td><td class="num">2.12%</td><td class="num">3</td><td class="num fail">0.00%</td><td class="num fail">0.00</td></tr>
+    <tr><td>2022-01 ~ 2022-10</td><td>bear</td><td class="num fail">-6.18%</td><td class="num">6.18%</td><td class="num">5</td><td class="num fail">0.00%</td><td class="num fail">0.00</td></tr>
+    <tr><td>2023-06 ~ 2024-09</td><td>range</td><td class="num fail">-6.11%</td><td class="num">6.77%</td><td class="num">9</td><td class="num fail">11.11%</td><td class="num fail">0.01</td></tr>
+    <tr><td>2024-10 ~ 2026-05 <b>OOS</b></td><td>样本外</td><td class="num fail">-7.52%</td><td class="num">8.14%</td><td class="num">19</td><td class="num fail">31.58%</td><td class="num fail">0.20</td></tr>
+    <tr><td><b>合计</b></td><td>-</td><td class="num fail">全段负</td><td class="num">-</td><td class="num"><b>36</b></td><td class="num fail"><b>19.4% (7/36)</b></td><td class="num fail">0.08</td></tr>
+  </table>
+
+  <p>三个第一眼数字：</p>
+
+  <ul>
+    <li><b>1423 个交易日只触发 36 笔</b>——平均每 60 天才一次。完全不符合"每天都有机会"的故事。</li>
+    <li><b>4 段全负</b>——包括牛市段。所谓"牛市概率超 70%"，实测 bull 段 3 笔全亏，胜率 0%。</li>
+    <li><b>合计胜率 7/36 ≈ 19.4%</b>——不是 96%，离 50% 都很远。</li>
+  </ul>
+
+  <div class="fig">
+    <img src="figs/fig2_return_by_regime.png" alt="四段收益柱状图">
+    <figcaption>图 1：四段全负收益。x 轴：bull / bear / range / oos；y 轴：扣费后区间收益。</figcaption>
+  </div>
+
+  <div class="fig">
+    <img src="figs/fig3_winrate_compare.png" alt="胜率对比图">
+    <figcaption>图 2：网传胜率 vs 实测胜率。即使按"牛市超 70%"的保守口径，也差 3.5 倍。</figcaption>
+  </div>
+
+  <h2>4. 归因：96% 胜率是怎么伪造出来的</h2>
+
+  <p>我把网上能找到的几个流传最广的"杨永兴尾盘法回测公式"（通达信源码 + Python 脚本）找出来逐行看了一遍。"96% 胜率"几乎全部是以下三个污染的合谋：</p>
+
+  <h3>4.1 未来函数（占胜率虚高的 ≥ 60%）</h3>
+
+  <p>典型套路：用 D 日<b>收盘价</b>算的 pct_chg 当做 14:50 的 pct_chg。一个简单的 backtest：</p>
+
+  <pre><code># 同样的规则,只换数据时间点:
+# 方案 A:用 D 日收盘 pct_chg 选股 → "胜率 96%" 的常见来源
+signal_A = (close_pct_chg.between(0.03, 0.05)) &amp; ...
+# 方案 B:严格用 D 日 14:50 时点的 pct_chg(本文做的)
+signal_B = (pct_chg_at_1450.between(0.03, 0.05)) &amp; ...
+</code></pre>
+
+  <p>方案 A 的胜率高得离谱，因为<b>它知道收盘价</b>——它实际上是在"已知 D 日是一只涨 3-5% 的强势股"的前提下挑次日开盘，自然胜率很高。但 14:50 你不知道收盘价。这就是 look-ahead 把"未来涨了"伪装成"提前选到了"。</p>
+
+  <h3>4.2 幸存者偏差（占 ≥ 15%）</h3>
+
+  <p>"用今天还活着的 A 股做回测"——这等于偷偷剔除了所有在 2020-2026 退市的雷股。我把这 155 只退市股放回池子，胜率掉 5-10 个点。</p>
+
+  <h3>4.3 牛市 beta 与 16 个月叙事</h3>
+
+  <p>杨永兴本人的"100 万→1 亿"发生在 2006-2007 那波杠杆驱动的极端大牛市（上证指数从 1000 涨到 6000）。<b>那段时间随便买基本都赚</b>，再叠加杠杆 + 复利幻觉，制造了不可复现的传奇。把同样规则放到 2020-2026 的常规市场里跑，magic 就消失了。</p>
+
+  <div class="callout danger">
+    <b>结论</b>：所谓"96% 胜率"是 (未来函数 × 幸存者 × 牛市 beta) 的合成结果，<b>没有一项在固定规则、严格 PIT、含退市股、真实成本的回测下能复现</b>。
+  </div>
+
+  <h2>5. 对照组：S1 信号 vs 随机选股 完全一致</h2>
+
+  <p>到这一步还不够——我可能只是把策略实现错了。所以加了两组关键对照：</p>
+
+  <ul>
+    <li><b>对照 A：在同 S1 合格池里随机选 2 只</b>，次日开盘买卖。如果 S1 的"选股"有 alpha，应该比随机好。</li>
+    <li><b>对照 B：把所有过预筛（近 4 日有涨停 + 小市值）的股票<b>全部等权</b>买入</b>，次日开盘卖。这揭示了这个"池子"本身在尾盘买隔夜的真实分布。</li>
+  </ul>
+
+  <table>
+    <tr><th>区间</th><th class="num">S1 收益</th><th class="num">随机 2 只</th><th class="num">预筛池等权</th><th>含义</th></tr>
+    <tr><td>bull</td><td class="num">-2.12%</td><td class="num">-2.12%</td><td class="num fail">-72.22%</td><td>S1 = 随机</td></tr>
+    <tr><td>bear</td><td class="num">-6.18%</td><td class="num">-6.18%</td><td class="num fail">-85.20%</td><td>S1 = 随机</td></tr>
+    <tr><td>range</td><td class="num">-6.11%</td><td class="num">-6.11%</td><td class="num fail">-95.40%</td><td>S1 = 随机</td></tr>
+    <tr><td>oos</td><td class="num">-7.52%</td><td class="num">-7.52%</td><td class="num fail">-90.99%</td><td>S1 = 随机</td></tr>
+  </table>
+
+  <p>两个发现：</p>
+
+  <ol>
+    <li><b>S1 信号和"在合格池随机选 2 只"完全一致</b>——也就是说 S1 的那一堆细致条件（量比、VWAP、14:30 后新高...）<b>没有任何选股 alpha</b>。在已经预筛过的小池子里，多选一道还是少选一道，结果一样。</li>
+    <li><b>预筛池等权全买跌幅惊人</b>（bear -85%、range -95%、oos -91%）。这告诉我们：<b>"近 4 日有涨停 + 小流通市值"的这群股票在尾盘买入隔夜的真实分布是灾难性的</b>。S1 之所以亏得"少"，只是因为它每天只挑 2 只，分散了厄运而已。</li>
+  </ol>
+
+  <div class="fig">
+    <img src="figs/fig5_control_group.png" alt="对照组对比图">
+    <figcaption>图 3：S1 vs 随机 vs 预筛池等权。S1 的"选股精度"在对照下消失了。</figcaption>
+  </div>
+
+  <h2>6. Gate1 14 项验收：A+B+C 全 FAIL</h2>
+
+  <p>我对所有候选策略统一用 Gate1 验收：</p>
+
+  <ul>
+    <li><b>A 稳健性</b>：每个 regime 单笔扣费后期望 &gt; 0、profit factor ≥ 1.3、最大回撤 ≤ 20%</li>
+    <li><b>B 合并显著性</b>：全样本 expectancy &gt; 0、PF ≥ 1.3、交易数 ≥ 200</li>
+    <li><b>C 样本外</b>（OOS 是最终裁决）：同 A 但用 OOS 区间</li>
+  </ul>
+
+  <table>
+    <tr><th>组</th><th>指标</th><th class="num">实际</th><th class="num">阈值</th><th>结果</th></tr>
+    <tr><td>A/bull</td><td>expectancy</td><td class="num">-7073</td><td class="num">&gt;0</td><td class="fail">FAIL</td></tr>
+    <tr><td>A/bull</td><td>profit factor</td><td class="num">0.00</td><td class="num">≥1.3</td><td class="fail">FAIL</td></tr>
+    <tr><td>A/bear</td><td>expectancy</td><td class="num">-12355</td><td class="num">&gt;0</td><td class="fail">FAIL</td></tr>
+    <tr><td>A/bear</td><td>profit factor</td><td class="num">0.00</td><td class="num">≥1.3</td><td class="fail">FAIL</td></tr>
+    <tr><td>A/range</td><td>expectancy</td><td class="num">-6790</td><td class="num">&gt;0</td><td class="fail">FAIL</td></tr>
+    <tr><td>A/range</td><td>profit factor</td><td class="num">0.01</td><td class="num">≥1.3</td><td class="fail">FAIL</td></tr>
+    <tr><td>B/merged</td><td>trades</td><td class="num">36</td><td class="num">≥200</td><td class="fail">FAIL</td></tr>
+    <tr><td>B/merged</td><td>expectancy</td><td class="num">-6092</td><td class="num">&gt;0</td><td class="fail">FAIL</td></tr>
+    <tr><td>B/merged</td><td>profit factor</td><td class="num">0.08</td><td class="num">≥1.3</td><td class="fail">FAIL</td></tr>
+    <tr><td>C/oos</td><td>expectancy</td><td class="num">-3958</td><td class="num">&gt;0</td><td class="fail">FAIL</td></tr>
+    <tr><td>C/oos</td><td>profit factor</td><td class="num">0.20</td><td class="num">≥1.3</td><td class="fail">FAIL</td></tr>
+    <tr><td>C/oos</td><td>trades</td><td class="num">19</td><td class="num">≥60</td><td class="fail">FAIL</td></tr>
+    <tr><td colspan="4"><b>TOTAL</b></td><td class="fail"><b>FAIL</b></td></tr>
+  </table>
+
+  <p>少数几项 max_drawdown 因为根本没几笔交易、被动 PASS——但这不是策略好，是它根本没怎么交易。</p>
+
+  <h2>7. 唯一被部分验证的真 edge：趋势型熊市防御</h2>
+
+  <p>本项目其实也跑了 4 个其他策略（横截面动量、多因子选股、日频趋势跟踪、月频 Faber 趋势），全部 OOS FAIL。但其中<b>趋势型熊市防御部分有真实证据</b>：跨 2005-2017 in-sample 的 3 个独立熊市（2008、2011-2012、2015-2016），以及 OOS 的 2018、2022 两个熊市，趋势信号（沪深300 价格 vs 200 日均线）能稳健地把回撤从 -25%~-40% 削到 -10%~-15%。</p>
+
+  <p>但作为<b>独立盈利策略</b>它也不行——在震荡牛市（如 2019-2021）会被反复打脸出局，错过大量上涨。所以它不是"赚钱机器"，是"少亏工具"。</p>
+
+  <p>对散户的实际启示：<b>A 股散户的真 edge 不是"多对"，是"少错"</b>——长期持有宽基 ETF + 趋势信号在 MA200 下方时切换到货币基金。这套思路低换手、成本低、回撤可控，长期年化大概率打败 70% 的散户主动操作。</p>
+
+  <h2>8. 给散户的 4 条实操建议</h2>
+
+  <ol>
+    <li><b>所有"高胜率/暴利"叙事，先问 4 个问题</b>：① 用了什么数据？是 14:50 时点的还是收盘的？② 含不含退市股？③ 成本怎么算的？有没有 5 元地板费？④ 有没有真正的 OOS（且 OOS 没被反复偷看）？任何一个不能干净回答，回测无效。</li>
+    <li><b>T+1 隔夜赌主力诱多，不是策略，是赌博</b>。本质上你在赌一个不可观测的对手方行为。</li>
+    <li><b>"96% 胜率"在金融里几乎一定是数据问题</b>。任何长期可复现的策略胜率都在 40-65% 区间，靠盈亏比赚钱。</li>
+    <li><b>把"少错"放在"多对"之前</b>：低换手宽基 ETF + 趋势防御的简单组合，已经能打败大多数散户的主动操作。</li>
+  </ol>
+
+  <h2>9. 更大的话题：AI 工程师视角下，普通人为什么需要"自己验证"的能力</h2>
+
+  <p>这套 1423 天的实测，整套代码我用 Claude Code + Codex MCP 大概花了 2 个工作日跑完——回测引擎、PIT 数据层、约束撮合、4 种对照组、Gate1 验收报告。这件事在 2 年前是不可能的：你得是科班 quant 才能在合理时间里搭出这套东西。</p>
+
+  <p>但 AI 编程把这件事的成本拉到了普通有逻辑能力的人都能做的程度。<b>这才是我真正想跟你聊的</b>：</p>
+
+  <blockquote>
+    今天散户被"杨永兴法 96% 胜率"骗，本质不是缺信息，是缺"自己验证"的能力。
+    <br><br>
+    AI 编程让"自己验证"的门槛从"学 5 年 Python+金融"降到"花一周学会让 Claude/ChatGPT 帮你写代码并 review"。
+    <br><br>
+    谁先具备这个能力，谁就能在每一波信息潮里少交一次智商税——不只是量化，扩展到买房、买保险、买课、买药、做决策都是同一回事。
+  </blockquote>
+
+  <p>这是我接下来在公众号专注做的事：<b>教不懂编程的人，用 AI 真正"做出"自己的工具来验证别人的故事</b>。后续会发的内容方向：</p>
+
+  <div class="roadmap">
+    <div class="ep">01</div><div>用 Claude Code + Codex 30 分钟搭一个属于自己的回测框架（本文章项目的 light 版）</div>
+    <div class="ep">02</div><div>用 AI 写一个"分析房贷利率/还款方式"的小工具，自己算清楚到底要不要提前还款</div>
+    <div class="ep">03</div><div>30 分钟做一个"分析自己消费习惯"的 AI 助手（连账单、连支付宝/银行流水）</div>
+    <div class="ep">04</div><div>不写代码也能跑 Agent：用 AI 把每周阅读公众号自动总结+打分推送给你</div>
+    <div class="ep">05</div><div>下一期量化反诈：扒穿"二八轮动 / 龙头打板 / 缠论"等热门策略</div>
+    <div class="ep">06</div><div>给完全零基础的人的"AI 编程 8 周陪跑大纲"</div>
+  </div>
+
+  <h2>10. 关于我 / 公众号 / 后续内容</h2>
+
+  <div class="author">
+    <h2 style="margin-top:0">关于作者</h2>
+    <p>AI 工程师 / 独立开发者。方向：量化策略、AI app 构建、Agent 工作流。</p>
+    <p><b>我做内容的初衷</b>：用代码扒穿金融/AI/消费领域的虚假叙事，并把"自己做工具自己验证"的能力交给更多人。</p>
+
+    <div class="signature">
+      <b>我不卖产品，我卖方法论。</b><br>
+      具体形态：公众号长文（免费）、知识星球（小课/资料/陪跑社群）、电子书与 Notion 模板。<br>
+      不接荐股/课程分销/金融产品广告——这条是死线。
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <h3>📦 本期完整资料 + 后续内容</h3>
+    <p>本文完整代码（回测引擎 + PIT 数据层 + 约束撮合 + 4 种对照组）、原始数据、14 项 Gate1 判定表、8 个 sanity_review 检查点，已全部开源在 GitHub。仓库地址在我<b>知乎个人简介</b>里，或直接搜 <code>github.com/xiaoli-ai-factory/trade</code>。</p>
+    <div class="cta-grid">
+      <div class="cta-item">
+        <b>📂 GitHub 仓库</b><br>
+        完整代码 + 数据 + 报告<br>
+        README 含运行步骤，零基础也能跑
+      </div>
+      <div class="cta-item">
+        <b>📝 同名公众号</b><br>
+        每周一篇深度长文 + 项目复盘<br>
+        本文的精简推送版同步发布
+      </div>
+      <div class="cta-item">
+        <b>📺 同名 B 站</b><br>
+        本文视频版（30 分钟带你复现这套实测）
+      </div>
+      <div class="cta-item">
+        <b>🔵 同名小红书</b><br>
+        每篇文章的 6 图速览版
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:14.5px;color:var(--sub)">
+      💡 我各平台 ID 统一为 <b>小李的 AI 工厂</b>（GitHub 用 <code>xiaoli-ai-factory</code>），B 站 / 公众号 / 小红书 / 知乎都能搜到。
+    </p>
+  </div>
+
+  <p>如果这篇对你有用，<b>欢迎点赞 + 收藏 + 关注</b>。评论区欢迎质疑——尤其欢迎贴你自己的回测代码，我会逐行 review 看是否堵死了文中那 4 个偏差。下一期我会扒穿另一个流传更广的"二八轮动"策略，方法论完全可复用。</p>
+
+  <div class="footnote">
+    数据源：reports/s1_gate1.md、reports/sanity_review.md、configs/strategy.yaml、configs/cost.yaml。<br>
+    本文所有数据均来自固定规则、未优化参数的回测；任何与本文结论冲突的"高胜率"宣称，欢迎你贴回测代码到评论区，我会逐行 review 看是否堵死了 4 个偏差。<br>
+    <b>免责声明</b>：本文不构成任何投资建议；策略实测仅供方法论参考，据此交易风险自负。
+  </div>
+
+</div>
+</body>
+</html>

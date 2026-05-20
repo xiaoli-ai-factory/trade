@@ -1,0 +1,55 @@
+# 回测区间、股票池、验收闸门 —— Claude 定稿，改动需 review
+# 关键纪律：oos 区间在 Gate1 之前严禁用于任何调参/选股门限调整（反过拟合）。
+
+regimes:
+  bull:  { start: "2020-07-01", end: "2021-02-10" }   # 结构牛
+  bear:  { start: "2022-01-01", end: "2022-10-31" }   # 下跌市
+  range: { start: "2023-06-01", end: "2024-09-30" }   # 震荡市
+  oos:   { start: "2024-10-01", end: "2026-05-15" }   # 样本外，禁止调参
+
+universe:
+  market: "A股全市场"
+  include_delisted: true       # 反幸存者偏差：必须含已退市股票
+  include_st: true             # 含 ST/*ST
+  min_list_days: 60            # 排除上市不足60日（次新波动失真）
+  exclude_bj: true             # 初期排除北交所（流动性/规则差异，后续可放开）
+
+# 验收闸门 Gate1（语义精确化 2026-05-19，防"闸门粒度错配"误杀/放水）：
+# 一个策略 PASS 需同时满足 A+B+C，否则 FAIL：
+#   A 稳健性(每个 regime: bull/bear/range 各自)：expectancy_after_cost>0 且
+#     profit_factor>=profit_factor_min 且 max_drawdown<=max_drawdown_max。
+#     —— 不在单个短 regime 内要求 min_trades（日频低频策略在~10月 bear 段凑不满200，
+#        强求会变成无意义闸门；统计显著性由 C 的合并样本+OOS 保证）。
+#   B 显著性(全区间合并样本)：trades>=min_trades 且 expectancy_after_cost>0 且
+#     profit_factor>=profit_factor_min。
+#   C 样本外(oos，调参阶段严禁触碰)：expectancy_after_cost>0 且
+#     profit_factor>=profit_factor_min 且 max_drawdown<=max_drawdown_max 且
+#     trades>=oos_min_trades。OOS 是最终裁决，OOS FAIL 即整体 FAIL。
+gate1:
+  expectancy_after_cost_gt: 0.0   # 扣全部成本后单笔期望 > 0
+  profit_factor_min: 1.3          # 总盈利/总亏损 ≥ 1.3
+  max_drawdown_max: 0.20          # 最大回撤 ≤ 20%
+  min_trades: 200                 # 合并样本统计显著性下限（高换手策略适用）
+  oos_min_trades: 60              # OOS 独立显著性下限（高换手策略适用）
+  # 胜率仅展示，不作为闸门
+  # 低频择时/趋势策略显著性原则（2026-05-19 预注册，防 p-hacking 的 reviewer 决策）：
+  #   低换手策略的统计显著性不能用"交易笔数"衡量（笔数少是其契合环境的特性，非缺陷）。
+  #   改用"机制跨多个独立历史周期一致性"判据 —— 这是趋势跟踪的学界标准评估法：
+  #   low_freq_significance: 需在 full_history 的 *每一个* 独立 bull 周期捕获正收益且
+  #     DD≤max_drawdown_max，*每一个* 独立 bear 周期资本保全(回撤显著低于买入持有，
+  #     绝对回撤≤max_drawdown_max)，且 OOS（含 ≥2 个独立 bull/bear 周期）整体
+  #     expectancy>0 且 PF≥profit_factor_min 且 DD≤max_drawdown_max。
+  #   —— 此原则一旦写定不得为某次结果再放宽；OOS 永不用于调参，是最终裁决。
+
+# 趋势/低频策略专用全历史切分（S1/S2 仍用上面的 regimes）
+full_history:
+  asset_min_start: "2005-04-08"   # 沪深300指数起始
+  in_sample: { start: "2005-04-08", end: "2017-12-31" }   # 含06-07牛/08崩/09反弹/11熊/14-15牛/15-16崩 多周期
+  oos:       { start: "2018-01-01", end: "2026-05-15" }    # 含18熊/19-21牛/22熊/23-24震荡 多独立周期，严禁调参
+  # in_sample 内独立周期(供一致性判据，预先列定，不可事后增删)：
+  bull_cycles: [["2006-01-01","2007-10-16"], ["2008-11-01","2009-08-04"], ["2014-07-01","2015-06-12"]]
+  bear_cycles: [["2008-01-14","2008-11-04"], ["2011-04-18","2012-12-03"], ["2015-06-12","2016-01-28"]]
+
+gate2:
+  paper_min_trading_days: 40      # 模拟盘 ≥ 约2个月交易日
+  nav_deviation_max: 0.30         # 模拟盘 NAV 与回测同期偏离上限（相对）

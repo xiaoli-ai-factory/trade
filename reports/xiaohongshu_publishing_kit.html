@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>杨永兴尾盘法反驳·小红书发布运营手册</title>
+<style>
+  :root{
+    --red:#FF2442; --redbg:#FFE4E9; --yellow:#FFD93D; --mint:#06D6A0;
+    --ink:#1B1B1B; --sub:#6B7280; --line:#E5E7EB; --card:#FAFAFA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:#F5F6F8; color:var(--ink); padding:32px 16px;
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,sans-serif;
+    line-height:1.7;
+  }
+  .wrap{max-width:920px;margin:0 auto}
+  h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+  h1 .badge{
+    display:inline-block;font-size:13px;background:var(--red);color:#fff;
+    padding:4px 12px;border-radius:20px;vertical-align:middle;margin-right:10px;font-weight:700
+  }
+  .meta{color:var(--sub);font-size:13px;margin:6px 0 22px}
+  h2{
+    font-size:21px;font-weight:800;margin:30px 0 12px;padding-left:12px;
+    border-left:5px solid var(--red);line-height:1.3
+  }
+  h3{font-size:16px;font-weight:700;margin:14px 0 6px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)
+  }
+  .copy-card{position:relative;background:var(--card);border:1px dashed var(--red)}
+  .copy-card pre{
+    white-space:pre-wrap;word-break:break-word;font-family:inherit;
+    font-size:14.5px;line-height:1.8;color:var(--ink)
+  }
+  .copy-btn{
+    position:absolute;top:14px;right:14px;background:var(--red);color:#fff;
+    border:none;border-radius:18px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer
+  }
+  .copy-btn:hover{opacity:.85}
+  .copy-btn.ok{background:var(--mint)}
+  .titles{display:grid;gap:8px;margin-top:8px}
+  .title-row{
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14.5px
+  }
+  .title-row .n{
+    flex-shrink:0;background:var(--redbg);color:var(--red);width:24px;height:24px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+  }
+  .title-row .t{flex:1}
+  .mini-btn{
+    background:#fff;border:1px solid var(--red);color:var(--red);border-radius:14px;
+    padding:4px 10px;font-size:12px;cursor:pointer;font-weight:700
+  }
+  .mini-btn:hover{background:var(--red);color:#fff}
+  .mini-btn.ok{background:var(--mint);color:#fff;border-color:var(--mint)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;background:#fff}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#FFF3F5;color:var(--ink);font-weight:700;font-size:13.5px}
+  tr:hover td{background:#FFFBFC}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  @media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .fig{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .fig img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;background:#FFF3F5}
+  .fig .cap{padding:9px 12px;font-size:13px;color:var(--sub)}
+  .fig .order{
+    display:inline-block;background:var(--red);color:#fff;border-radius:8px;
+    padding:1px 8px;font-size:12px;font-weight:800;margin-right:6px
+  }
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .tag{background:var(--redbg);color:var(--red);padding:5px 12px;border-radius:14px;font-size:13px;font-weight:600}
+  .filelist{
+    background:#0F1115;color:#D6D7DB;padding:14px 18px;border-radius:12px;
+    font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:12.5px;line-height:1.8;
+    overflow-x:auto;white-space:pre
+  }
+  .followup li{margin:6px 0;font-size:14.5px}
+  .footnote{color:var(--sub);font-size:12px;border-top:1px solid var(--line);margin-top:28px;padding-top:14px}
+  .ok-banner{
+    background:linear-gradient(90deg,#FFE4E9,#FFFBE3);border:1px solid var(--red);
+    border-radius:14px;padding:14px 18px;color:var(--red);font-weight:700;margin:14px 0
+  }
+  .author-card{
+    background:linear-gradient(135deg,#fff,#FFF3F5);border:1px solid var(--red);
+    border-radius:18px;padding:22px 24px;margin:14px 0
+  }
+  .author-card .signature{
+    background:#fff;border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;
+    margin:10px 0;font-size:14.5px
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1><span class="badge">AI 量化 · 发布运营手册</span>杨永兴尾盘法反驳 · 小红书发布套件</h1>
+  <div class="meta">配套：<code>reports/xiaohongshu_yangyongxing_refute.html</code> + 6 张图 + 文案 + 作者人设 + 内容矩阵 · 截屏即发</div>
+
+  <div class="ok-banner">✅ 6 张数据图已生成（1080×1350，小红书 3:4 竖图）｜ ✅ 所有数字来自 reports/s1_gate1.md 真实实验｜ ✅ 复跑脚本 scripts/make_xiaohongshu_figs.py</div>
+
+  <h2>① 三个备选标题（点 Copy）</h2>
+  <div class="card">
+    <div class="titles">
+      <div class="title-row">
+        <span class="n">1</span>
+        <span class="t">扒穿杨永兴尾盘法：1423天实测，6年只触发36笔，全段亏损</span>
+        <button class="mini-btn" data-text="扒穿杨永兴尾盘法：1423天实测，6年只触发36笔，全段亏损">Copy</button>
+      </div>
+      <div class="title-row">
+        <span class="n">2</span>
+        <span class="t">AI 量化亲测，那个号称『100万→1亿』的尾盘法，我用代码扒了它</span>
+        <button class="mini-btn" data-text="AI 量化亲测，那个号称『100万→1亿』的尾盘法，我用代码扒了它">Copy</button>
+      </div>
+      <div class="title-row">
+        <span class="n">3</span>
+        <span class="t">小红书都在传的杨永兴一夜持股法，被我用真数据反向锤穿了</span>
+        <button class="mini-btn" data-text="小红书都在传的杨永兴一夜持股法，被我用真数据反向锤穿了">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>② 正文（一键复制）</h2>
+  <div class="card copy-card">
+    <button class="copy-btn" id="copy-main">📋 复制正文</button>
+<pre id="main-copy">刷到太多人推杨永兴尾盘买入法了——
+「下午2:50选股、次日开盘卖、胜率96%、100万16个月做到1亿」
+听着像提款机，对吧？
+
+我做 AI 量化的，就用代码亲测了一遍 👇
+
+✅ 数据：BaoStock 5分钟K线，1423个交易日（2020-07~2026-05）
+✅ 严守"无未来函数"——只用14:50之前的数据，14:50决策（绝大多数自媒体的"回测"都偷偷用了未来数据）
+✅ 反幸存者：含155只退市股，不挑赢家
+✅ 真实成本：万2.5+5元地板+印花税+0.2%滑点
+✅ 代码逐行 review，所有判定可审计
+
+结果——
+🚨 6年只触发 36笔（不是"每天都有机会"，是平均每60天才一次）
+🚨 牛市 -2.1%、熊市 -6.2%、震荡 -6.1%、样本外 -7.5%——每个市场都亏
+🚨 合计胜率 7/36 ≈ 19.4%（不是 96%）
+🚨 利润因子全部 &lt; 0.21（合格线 ≥ 1.3）
+🚨 与"在合格池随机选2只"完全一致 → 杨永兴信号没有 alpha
+
+那"100万→1亿"是怎么来的？
+👉 2006-2007 极端大牛市的 beta，叠加杠杆+复利幻觉，跟"策略"没关系。
+👉 自媒体复刻的"96%胜率"几乎全部用了未来函数（盘后才知道的收盘价倒推14:50决策）——回测无效。
+
+给散户的3条实操建议 💡
+① 任何"高胜率/暴利"叙事，先问"扣完费、含滑点、含跌停卖不掉、含退市股的回测在哪？"
+② T+1 + 隔夜风险下，没有"稳定提款机"，赌主力诱多不是策略是赌博
+③ A股散户的真 edge 是少错而非多对：低换手宽基ETF + 趋势防御
+
+完整代码 + 数据 + 14项 Gate1 判定表，全在文末 📊
+下期：用同样方法扒穿你听过的另一个"必赚神话" 🔍
+
+关注我，少交一次智商税 🤝</pre>
+  </div>
+
+  <h2>③ 标签（一键复制）</h2>
+  <div class="card copy-card">
+    <button class="copy-btn" id="copy-tags">📋 复制标签</button>
+<pre id="tags-copy">#股票 #量化交易 #杨永兴 #尾盘买入法 #AI量化 #股民避坑 #理财避坑 #策略实测 #投资思维 #数据分析</pre>
+    <div class="tags" aria-hidden="true">
+      <span class="tag">#股票</span><span class="tag">#量化交易</span><span class="tag">#杨永兴</span>
+      <span class="tag">#尾盘买入法</span><span class="tag">#AI量化</span><span class="tag">#股民避坑</span>
+      <span class="tag">#理财避坑</span><span class="tag">#策略实测</span><span class="tag">#投资思维</span><span class="tag">#数据分析</span>
+    </div>
+  </div>
+
+  <h2>④ 6 张图发布顺序（截屏即用）</h2>
+  <div class="card">
+    <table>
+      <tr><th style="width:60px">顺位</th><th>图</th><th>用法</th></tr>
+      <tr><td><b>1</b></td><td><code>fig1_cover.png</code></td><td>首图，<b>爆点</b>，标题就是封面字</td></tr>
+      <tr><td><b>2</b></td><td><code>fig3_winrate_compare.png</code></td><td>第二图，<b>反差最强</b>（96% vs 19.4%），评论必炸</td></tr>
+      <tr><td><b>3</b></td><td><code>fig2_return_by_regime.png</code></td><td>第三图，全段亏的视觉证据</td></tr>
+      <tr><td><b>4</b></td><td><code>fig4_trades_frequency.png</code></td><td>第四图，"每天都有机会"的祛魅</td></tr>
+      <tr><td><b>5</b></td><td><code>fig5_control_group.png</code></td><td>第五图，揭示"信号无 alpha"（专业感强）</td></tr>
+      <tr><td><b>6</b></td><td><code>fig6_gate1_verdict.png</code></td><td>第六图收尾，盖章 FAIL，权威感</td></tr>
+    </table>
+    <div class="grid">
+      <div class="fig"><img src="figs/fig1_cover.png" alt="cover"><div class="cap"><span class="order">1</span>封面</div></div>
+      <div class="fig"><img src="figs/fig3_winrate_compare.png" alt="winrate"><div class="cap"><span class="order">2</span>胜率反差</div></div>
+      <div class="fig"><img src="figs/fig2_return_by_regime.png" alt="returns"><div class="cap"><span class="order">3</span>四段收益</div></div>
+      <div class="fig"><img src="figs/fig4_trades_frequency.png" alt="freq"><div class="cap"><span class="order">4</span>触发频率</div></div>
+      <div class="fig"><img src="figs/fig5_control_group.png" alt="control"><div class="cap"><span class="order">5</span>对照组</div></div>
+      <div class="fig"><img src="figs/fig6_gate1_verdict.png" alt="verdict"><div class="cap"><span class="order">6</span>Gate1判定</div></div>
+    </div>
+    <p style="font-size:13.5px;color:var(--sub);margin-top:10px">
+      <b>节奏建议</b>：小红书图集 6 张刚好。封面 + 反差图是流量入口，剩 4 张为深度证据形成"想留言反驳但被数据压死"的体验，评论区会主动帮你扩散。
+    </p>
+  </div>
+
+  <h2>⑤ 作者人设落地</h2>
+  <div class="author-card">
+    <p style="font-size:15px;font-weight:600">人设公式：<b style="color:var(--red)">AI 量化分析师 + 代码 + 实测 + 教学</b>，不卖产品，卖方法论。</p>
+    <h3>主页签名建议</h3>
+    <div class="signature">
+      AI 量化分析师 · 用代码扒穿金融谣言<br>
+      量化策略 / Agent 工作流 / App 构建 · 都教你做<br>
+      公众号同名，干货长文在那
+    </div>
+    <h3>内容矩阵（接下来 6 期）</h3>
+    <table>
+      <tr><th style="width:60px">期数</th><th>主题</th><th>定位作用</th></tr>
+      <tr><td><b>本期</b></td><td>杨永兴法实测（数据反驳）</td><td>建立"数据型量化"心智</td></tr>
+      <tr><td>02</td><td>「网红量化课」教你的"二八轮动"实测翻车</td><td>延续反神话叙事</td></tr>
+      <tr><td>03</td><td>用 Claude Code + Codex 30分钟搭一个属于自己的回测框架</td><td><b style="color:var(--red)">最吸粉</b>，开始建立"教学变现"心智</td></tr>
+      <tr><td>04</td><td>A 股散户的"少错"策略——趋势防御实测（项目唯一真 edge）</td><td>把诚实结论转为正面方法论</td></tr>
+      <tr><td>05</td><td>自己跑 AI Agent 做尽调，比花钱买荐股靠谱</td><td>接入 AI 教学定位</td></tr>
+      <tr><td>06</td><td>发布付费小报告/课程入口</td><td>信任建立后的变现转化</td></tr>
+    </table>
+  </div>
+
+  <h2>⑥ 文件清单</h2>
+  <div class="card">
+<div class="filelist">reports/xiaohongshu_yangyongxing_refute.html   单页HTML（电脑全屏截屏看完整故事）
+reports/xiaohongshu_publishing_kit.html        本页（发布运营手册）
+reports/figs/fig1_cover.png                    封面，1080×1350
+reports/figs/fig2_return_by_regime.png         四段收益柱状
+reports/figs/fig3_winrate_compare.png          胜率对比（爆款图）
+reports/figs/fig4_trades_frequency.png         触发频率反差
+reports/figs/fig5_control_group.png            对照组揭示无 alpha
+reports/figs/fig6_gate1_verdict.png            Gate1 全 FAIL
+scripts/make_xiaohongshu_figs.py               脚本可复跑，未来扒别的策略可改数据复用
+reports/s1_gate1.md                            实验原始报告（所有图表数据源）
+reports/sanity_review.md                       8 个检查点，防 p-hacking 全程留痕</div>
+  </div>
+
+  <h2>⑦ 我能继续帮你做（按需触发）</h2>
+  <div class="card">
+    <ul class="followup">
+      <li>📄 把数据反驳 HTML 转 PDF（用 <code>md-to-pdf</code> skill，公众号/知识星球可上传）</li>
+      <li>🎬 出一份 30秒 reel 视频解说脚本（小红书/抖音 reel 版）</li>
+      <li>🎓 出"30分钟用 Claude Code + Codex 复现这套实测"教学大纲（你第 3 期的内容素材，开始绑定"AI 教量化"心智）</li>
+      <li>🔍 选第二个量化神话（如二八轮动 / 龙头打板 / 缠论尾盘）继续做数据反驳，复用本套管线</li>
+    </ul>
+    <p style="font-size:13.5px;color:var(--sub);margin-top:8px">直接说要哪个我就接着干。</p>
+  </div>
+
+  <div class="footnote">
+    本运营手册由 Claude Code 自动整合，所有数据来自 <code>reports/s1_gate1.md</code> 真实实验。数据反驳详情见 <a href="xiaohongshu_yangyongxing_refute.html" style="color:var(--red);font-weight:700">数据反驳 HTML</a>。
+  </div>
+</div>
+
+<script>
+function bindCopy(btn, getText){
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(getText());
+      const orig = btn.textContent;
+      btn.classList.add('ok');
+      btn.textContent = '✅ 已复制';
+      setTimeout(()=>{ btn.classList.remove('ok'); btn.textContent = orig; }, 1500);
+    } catch(e){ alert('复制失败，请手动选取'); }
+  });
+}
+bindCopy(document.getElementById('copy-main'),  () => document.getElementById('main-copy').innerText);
+bindCopy(document.getElementById('copy-tags'),  () => document.getElementById('tags-copy').innerText);
+document.querySelectorAll('.mini-btn[data-text]').forEach(b => bindCopy(b, () => b.getAttribute('data-text')));
+</script>
+</body>
+</html>
