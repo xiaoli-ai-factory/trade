@@ -136,3 +136,24 @@ s11_defensive_composite:               # 防御组合: S3b 趋势防御 + S9 Ris
   #   - 合成: 趋势在=风险加权进攻,趋势出=纯防御。
   # 这不是 OOS 调参,是基于两个独立 partial PASS 机制的预注册合成。
   # 测试假设:如果合成有效,这是项目唯一可能 Gate1 PASS 的策略。
+
+s12_global_risk_parity:                # 跨大类资产 Risk Parity (突破单一 A 股局限)
+  enabled: true
+  rebalance: "monthly"                 # 月频
+  pool:                                # 跨股/债/海外/商品大类
+    - { code: "510300", name: "沪深300ETF", class: "a_share_large" }
+    - { code: "510500", name: "中证500ETF", class: "a_share_mid" }
+    - { code: "159920", name: "恒生ETF", class: "hk_share" }
+    - { code: "513100", name: "纳指ETF", class: "us_share" }
+    - { code: "513500", name: "标普500ETF", class: "us_share_alt" }
+    - { code: "518880", name: "黄金ETF", class: "commodity" }
+    - { code: "511010", name: "国债ETF", class: "bond" }
+  lookback_vol_days: 60                # 同 S9 不调
+  weight_method: "inverse_volatility"
+  weight_normalize: true
+  trend_filter: false                  # 不加趋势过滤(避免重蹈 S11 OOS FAIL 覆辙)
+  # 经济学先验:
+  # 1. 跨大类资产相关性低,risk parity 应优于单一市场版
+  # 2. 全球资产对中国宏观风险有自然对冲(美股/纳指/黄金独立周期)
+  # 3. 若 S12 OOS PASS, 是项目首个真 Gate1 PASS;若 FAIL, 坐实 A 股散户终局
+  # 数据可得性必须先实测(QDII ETF 取数可能有限制)

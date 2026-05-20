@@ -554,6 +554,17 @@ def _fetch_etf_daily(symbol: str, start: date, end: date) -> pd.DataFrame:
     )
 
 
+def _etf_market_symbol(symbol: str | int) -> str:
+    code = _normalize_symbol(symbol)
+    if code.startswith(("5", "6", "9")):
+        return f"sh{code}"
+    return f"sz{code}"
+
+
+def _fetch_etf_daily_sina(symbol: str) -> pd.DataFrame:
+    return _call_akshare(ak.fund_etf_hist_sina, symbol=_etf_market_symbol(symbol))
+
+
 def _normalize_etf_daily(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
     if raw.empty:
         return pd.DataFrame()
@@ -574,6 +585,24 @@ def _normalize_etf_daily(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
     return out.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
 
 
+def _normalize_etf_daily_sina(raw: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    if raw.empty:
+        return pd.DataFrame()
+    out = pd.DataFrame(
+        {
+            "symbol": _normalize_symbol(symbol),
+            "date": pd.to_datetime(raw["date"], errors="coerce").dt.date,
+            "open": pd.to_numeric(raw["open"], errors="coerce"),
+            "high": pd.to_numeric(raw["high"], errors="coerce"),
+            "low": pd.to_numeric(raw["low"], errors="coerce"),
+            "close": pd.to_numeric(raw["close"], errors="coerce"),
+            "vol": pd.to_numeric(raw["volume"], errors="coerce"),
+            "amount": pd.to_numeric(raw["amount"], errors="coerce"),
+        }
+    )
+    return out.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
+
+
 def get_etf_daily(
     symbol: str | int,
     start: str | date = "1990-01-01",
@@ -589,9 +618,27 @@ def get_etf_daily(
     if cached is not None:
         return cached
 
-    raw = _fetch_etf_daily(code, start_date, end_date)
-    normalized = _normalize_etf_daily(raw, code)
-    out = _finalize_s3_daily(normalized, code, start_date, end_date, name=code, source="eastmoney_fund_etf_hist_em")
+    errors: list[Exception] = []
+    normalized = pd.DataFrame()
+    source = "eastmoney_fund_etf_hist_em"
+    try:
+        raw = _fetch_etf_daily(code, start_date, end_date)
+        normalized = _normalize_etf_daily(raw, code)
+    except Exception as exc:
+        errors.append(exc)
+
+    if normalized.empty:
+        source = "sina_fund_etf_hist_sina"
+        try:
+            raw = _fetch_etf_daily_sina(code)
+            normalized = _normalize_etf_daily_sina(raw, code)
+        except Exception as exc:
+            errors.append(exc)
+
+    if normalized.empty and errors:
+        raise RuntimeError(f"ETF daily fetch failed for {code}") from errors[-1]
+
+    out = _finalize_s3_daily(normalized, code, start_date, end_date, name=code, source=source)
     _write_cache(path, out)
     return out
 
