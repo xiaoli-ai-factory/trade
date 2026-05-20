@@ -157,3 +157,21 @@ s12_global_risk_parity:                # 跨大类资产 Risk Parity (突破单�
   # 2. 全球资产对中国宏观风险有自然对冲(美股/纳指/黄金独立周期)
   # 3. 若 S12 OOS PASS, 是项目首个真 Gate1 PASS;若 FAIL, 坐实 A 股散户终局
   # 数据可得性必须先实测(QDII ETF 取数可能有限制)
+
+s13_vol_targeted_global_rp:            # S12 基础上加 Vol Targeting (Bridgewater 全天候核心)
+  enabled: true
+  base_pool: "s12_global_risk_parity"  # 复用 S12 七大类 ETF 池
+  rebalance: "monthly"
+  lookback_vol_days: 60                # 同 S9/S12 不调
+  weight_method: "inverse_volatility"  # 同 S12 risk parity 基础权重
+  # === Vol Targeting 部分 ===
+  target_portfolio_vol_annual: 0.08    # 目标年化波动率 8% (Bridgewater 全天候典型: 8-10%)
+  leverage_max: 1.5                    # 最大杠杆 1.5x (防爆仓; 散户实际很难加杠杆,这是模拟)
+  leverage_min: 0.3                    # 最小杠杆 0.3 (即可空仓 70%)
+  rebal_when_vol_drift_pct: 0.25       # 当前实际波动率与目标偏离 >25% 时立即重调
+  # 经济学先验:
+  # Bridgewater 全天候/All Weather 核心: 在 risk parity 基础上加波动率目标控制,
+  # 使整体组合波动率稳定,降低尾部风险. 是机构标配,非数据挖掘.
+  # 假设: S13 应能在 bear 段把 S12 的 -12.25% 进一步降低 (低 vol 时降杠杆 = 减仓);
+  # OOS 可能因降 leverage 而轻微让出收益,但 DD 应更小.
+  # 这是 backtest 阶段最后一次试验,完成后停止 hunting.
