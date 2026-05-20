@@ -91,3 +91,21 @@ s9b_low_vol_stock_picking:             # S9 变体：纯股票低波动选股(�
   hold_n: 20
   lookback_vol_days: 120
   pool: "csi300_constituents"
+
+s10_pairs_trading:                     # 配对交易/协整套利（市场中性,学术经典）
+  enabled: true
+  rebalance: "daily_signal"            # 每日检查 z-score
+  universe: "csi300_constituents"      # 沪深300成分股(从 PIT panel 流动性子集中筛)
+  formation_window_days: 252           # 1 年训练窗口选配对
+  trading_window_days: 126             # 6 个月交易窗口
+  selection_method: "engle_granger"    # Engle-Granger 协整检验
+  num_pairs: 5                         # 选 5 对协整最强配对
+  entry_z: 2.0                         # |z| ≥ 2 入场
+  exit_z: 0.5                          # |z| ≤ 0.5 平仓
+  stop_z: 3.5                          # |z| ≥ 3.5 止损(协整失效)
+  pair_capital_pct: 0.20               # 每对 20% 资本(5 对满仓)
+  allow_short: false                   # ⚠️ A 股做空困难,先做"只多腿"近似版
+                                       # short_leg 不真做空,改为"避开高估侧+只买低估侧"
+  # 经济学先验：配对协整套利在美股市场中性,A股因①做空困难②协整不稳定③政策冲击大,
+  # 预期 alpha 远不如美股。验证 A 股市场中性策略是否在散户层面可行。
+  # 反诈价值：揭示"市场中性=零风险"的话术陷阱(实际有协整失效风险)。
