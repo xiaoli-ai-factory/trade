@@ -109,3 +109,30 @@ s10_pairs_trading:                     # 配对交易/协整套利（市场中�
   # 经济学先验：配对协整套利在美股市场中性,A股因①做空困难②协整不稳定③政策冲击大,
   # 预期 alpha 远不如美股。验证 A 股市场中性策略是否在散户层面可行。
   # 反诈价值：揭示"市场中性=零风险"的话术陷阱(实际有协整失效风险)。
+
+s11_defensive_composite:               # 防御组合: S3b 趋势防御 + S9 Risk Parity 预注册合成
+  enabled: true
+  # ==== 核心机制(基于已验证的 partial PASS, 预注册不调参) ====
+  trend_signal:
+    asset: "sh000300"                  # 用沪深300 指数判趋势(数据更长更稳定)
+    ma_len: 200                        # S3b 已验证 MA200 经典预注册值
+    rule: "close > MA200 → trend_on / 否则 trend_off"
+  pool_when_trend_on:                  # 趋势 PASS 时用 S9 Risk Parity 配权
+    - { code: "510300", name: "沪深300ETF" }
+    - { code: "510500", name: "中证500ETF" }
+    - { code: "512880", name: "证券ETF" }
+    - { code: "512010", name: "医药ETF" }
+    - { code: "511010", name: "国债ETF" }
+  pool_when_trend_off:                 # 趋势 FAIL 时 100% 防御
+    - { code: "511010", name: "国债ETF", weight: 1.0 }
+  lookback_vol_days: 60                # 同 S9 不调
+  rebalance: "monthly"                 # 月末判信号 + 重算权重
+  rebalance_trigger:
+    - "monthly"                        # 每月末
+    - "trend_flip"                     # 趋势翻转时立刻重平衡(快速防御)
+  # 经济学先验:
+  #   - S3b 趋势防御被 S1-S2017 多熊市 OOS 验证(2018/2022 资本保全)
+  #   - S9 Risk Parity OOS PASS(expectancy/PF/DD 全过)
+  #   - 合成: 趋势在=风险加权进攻,趋势出=纯防御。
+  # 这不是 OOS 调参,是基于两个独立 partial PASS 机制的预注册合成。
+  # 测试假设:如果合成有效,这是项目唯一可能 Gate1 PASS 的策略。
