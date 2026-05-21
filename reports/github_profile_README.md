@@ -39,7 +39,7 @@
 跨界工程师，理性是母语：
 
 - 🎓 **清华** 工科出身，硬件方向
-- 🔬 **芯片架构** 在职多年（CPU/GPU 微架构、SoC、性能建模、PGO/AutoFDO/BOLT）
+- 🔬 **芯片架构** 在职多年（CPU / GPU 微架构、图像芯片、AI 芯片）
 - 🤖 **AI 框架** 重度搭建者（Claude Code · Codex MCP · Agent 工作流）
 - 🛠️ **独立开发** 信仰：每个项目都跑通 + 上 GitHub + 公开数据可审计
 
@@ -108,28 +108,27 @@
 
 <table>
 <tr>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-### 🚧 项目 1
-<sub>**[TODO: 待你提供]**</sub>
+### 🍎 热量窗口 · 个人 AI 健康 App
+<sub>iOS（SwiftUI / SwiftData / HealthKit）+ Node 后端 + OpenAI 视觉模型</sub>
 
-📅 Coming Q?
+拍一张餐食照片，AI 估算热量；本机 HealthKit 计算每日"热量窗口"。
+**核心隐私原则**：HealthKit 数据只在本机用，不上传后端；仅食物图片走 AI。
 
-</td>
-<td width="33%" valign="top">
-
-### 🚧 项目 2
-<sub>**[TODO: 待你提供]**</sub>
-
-📅 Coming Q?
+📅 Coming Q3 2026
 
 </td>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-### 🚧 项目 3
-<sub>**[TODO: 待你提供]**</sub>
+### 🔌 SPEC_in · 芯片 Bringup 完整框架设计
+<sub>从 wafer-in 到 OS-up 的端到端 bringup 工程框架</sub>
 
-📅 Coming Q?
+把"芯片回来后到能跑 OS"中间常见 6-12 个月的混乱过程，
+拆为可复用的 stage / probe / regression / 责任矩阵。
+本职工作 + AI 工具的结合。
+
+📅 Coming Q4 2026
 
 </td>
 </tr>
@@ -182,12 +181,11 @@
 > 全网同名「**小李的 AI 工厂**」· 认名字就能跳到任何平台
 
 <table>
-<tr><th width="120">平台</th><th>内容形式</th><th>搜索词</th></tr>
-<tr><td align="center">📕 <strong>小红书</strong></td><td>6 图速览 · 数据反诈钩子 · 流量入口</td><td>小李的 AI 工厂</td></tr>
-<tr><td align="center">📝 <strong>知乎</strong></td><td>5000-8000 字深度技术长文 · 含完整代码</td><td>小李的 AI 工厂</td></tr>
-<tr><td align="center">📺 <strong>B 站</strong></td><td>30 分钟视频版 · 带你复现每个项目</td><td>小李的 AI 工厂</td></tr>
-<tr><td align="center">📨 <strong>公众号</strong></td><td>每周一篇深度长文 + 项目复盘 · 私域终点</td><td>小李的 AI 工厂</td></tr>
-<tr><td align="center">💬 <strong>学习群</strong></td><td>项目代码 / 答疑 / 周直播预告</td><td>主页置顶笔记取最新二维码</td></tr>
+<tr><th width="120">平台</th><th>内容形式</th><th>状态</th></tr>
+<tr><td align="center">📕 <strong>小红书</strong></td><td>6 图速览 · 数据反诈钩子 · <b>主战场</b></td><td>搜「小李的 AI 工厂」</td></tr>
+<tr><td align="center">📝 <strong>知乎</strong></td><td>5000-8000 字深度技术长文 · 含完整代码</td><td>搜「小李的 AI 工厂」</td></tr>
+<tr><td align="center">📺 <strong>B 站</strong></td><td>30 分钟视频版 · 带你复现每个项目</td><td>规划中（视小红书/知乎反馈再启动）</td></tr>
+<tr><td align="center">📨 公众号 / 学习群</td><td>—</td><td>暂未开通，先看小红书/知乎读者反馈再决定</td></tr>
 </table>
 
 ---
@@ -207,9 +205,10 @@
 
 ## 📬 联系 / Contact
 
-- 💡 **私域终点**：搜公众号「小李的 AI 工厂」关注后回复关键词「**扒穿**」领本系列完整资料包
-- 🛠️ **技术反馈**：[trade/issues](https://github.com/xiaoli-ai-factory/trade/issues) 欢迎 PR / 质疑 / 评论
-- 📮 **商务合作**（非金融广告）：通过 GitHub Issues 留邮箱
+- 🛠️ **技术反馈 / 项目讨论**：[trade/issues](https://github.com/xiaoli-ai-factory/trade/issues) 欢迎 PR / 质疑 / 评论 / 选题建议
+- 📕 **内容订阅**：小红书 / 知乎 搜「小李的 AI 工厂」（认名字就行，全网同名）
+- 📮 **商务合作**（**非金融广告**）：通过 GitHub Issues 留言留邮箱
+- ⏳ 公众号 / 微信学习群暂未开通，先看小红书 / 知乎反馈再决定下一步
 
 ---
 

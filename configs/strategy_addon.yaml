@@ -175,3 +175,35 @@ s13_vol_targeted_global_rp:            # S12 基础上加 Vol Targeting (Bridgew
   # 假设: S13 应能在 bear 段把 S12 的 -12.25% 进一步降低 (低 vol 时降杠杆 = 减仓);
   # OOS 可能因降 leverage 而轻微让出收益,但 DD 应更小.
   # 这是 backtest 阶段最后一次试验,完成后停止 hunting.
+
+s14_convertible_bond_double_low:       # 可转债"双低"策略 (A 股传闻真有 alpha 的策略)
+  enabled: true
+  rebalance: "monthly"                 # 月频再平衡 (低换手)
+  hold_n: 10                           # 持有 Top 10 双低转债等权
+  filters:
+    price_max: 130.0                   # 价格 <130 (有债底保护)
+    premium_max: 0.30                  # 转股溢价率 <30% (不追高溢价)
+    min_volume_yuan: 5.0e6             # 单日成交额 >500万 (用 close*volume 近似)
+    exclude_redeem_pending: true       # 排除已公告强赎/临近强赎(最后交易日<30天)
+    exclude_new_days: 30               # 上市<30天剔除(避免新债定价偏差)
+  rank_score: "price + premium_rate * 100"   # Stein 双低指标:价格(元) + 溢价率(%)
+  cost_model:
+    commission_rate: 0.00025           # 万 2.5 (可转债佣金通常更低,这是上界保守值)
+    min_per_order: 5.0                 # 5 元地板
+    stamp_duty_sell: 0.0               # 可转债免印花税 (与股票不同)
+    transfer_fee_rate: 0.00001         # 过户费保留
+    slippage_rate: 0.002               # 双边 0.2%
+  weight: "equal"                      # 等权
+  data_source:
+    daily: "ak.bond_zh_hs_cov_daily"   # 主价格源(无amount)
+    factor: "ak.bond_zh_cov_value_analysis"  # 转股溢价率核心
+    universe: "ak.bond_zh_cov + retired list from bond_cb_redeem_jsl"  # 反幸存者
+  known_limits:
+    - "amount 字段缺失,用 close*volume 近似"
+    - "转股价历史不完整,只有调整日志"
+    - "JSL 无 cookie 仅取当前 30 行,历史用 value_analysis fallback"
+  # 经济学先验:
+  # 可转债"双低"是 A 股市场广为流传的真 alpha 候选,
+  # 假设来源: T+0 + 散户少接触 + 下有债底保护 + 上有股性弹性。
+  # 验证假设: 严格 PIT + 反幸存者 + 真实成本 + OOS 隔离下,该 alpha 是否仍存在,
+  # 还是与股票策略同样被实证否决。

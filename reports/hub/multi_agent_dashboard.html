@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>小李的 AI 工厂 · Multi-Agent Dashboard</title>
+<style>
+  :root{
+    --bg:#0f1115;--card:#171a21;--card2:#1d212b;--line:#2a2f3a;
+    --txt:#e6e8ee;--sub:#9aa3b2;--xhs:#FF2442;
+    --quant:#4f9dff;--content:#06D6A0;
+    --good:#3ecf8e;--warn:#f5a623;--bad:#ef5b5b;--idle:#6b7280;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--txt);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.6;padding:30px 18px 80px;
+  }
+  .wrap{max-width:1240px;margin:0 auto}
+  .top{
+    background:linear-gradient(135deg,#1f2330,#171a21);
+    border:1px solid var(--line);border-radius:16px;padding:24px 28px;margin-bottom:24px;
+  }
+  h1{font-size:25px;font-weight:900;margin-bottom:6px}
+  h1 .red{color:var(--xhs)}
+  .meta{color:var(--sub);font-size:13px}
+  h2{
+    font-size:20px;font-weight:800;margin:32px 0 14px;
+    padding-left:12px;border-left:5px solid var(--xhs);
+    display:flex;align-items:center;gap:10px;
+  }
+  h2 .agent-tag{
+    font-size:11.5px;padding:3px 10px;border-radius:12px;font-weight:700;
+  }
+  .tag-quant{background:rgba(79,157,255,.2);color:var(--quant);border:1px solid rgba(79,157,255,.4)}
+  .tag-content{background:rgba(6,214,160,.2);color:var(--content);border:1px solid rgba(6,214,160,.4)}
+  /* Goals progress */
+  .goals{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+  @media(max-width:760px){.goals{grid-template-columns:1fr}}
+  .goal{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 22px;
+  }
+  .goal .title{font-size:14.5px;font-weight:700;color:var(--sub)}
+  .goal .progress-bar{
+    background:var(--card2);height:8px;border-radius:6px;overflow:hidden;margin:10px 0 6px;
+  }
+  .goal .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--xhs),var(--warn));
+    border-radius:6px;
+  }
+  .goal .status{font-size:13.5px;color:var(--txt)}
+  .goal .next{font-size:12px;color:var(--sub);margin-top:6px}
+  /* Agent grid */
+  .agents{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:14px 0}
+  @media(max-width:1100px){.agents{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:680px){.agents{grid-template-columns:repeat(2,1fr)}}
+  .sub-card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 12px;position:relative;overflow:hidden;
+  }
+  .sub-card.quant{border-color:rgba(79,157,255,.3)}
+  .sub-card.content{border-color:rgba(6,214,160,.3)}
+  .sub-card .id{
+    font-size:11px;font-weight:900;color:var(--sub);letter-spacing:1px;
+  }
+  .sub-card .name{font-size:13.5px;font-weight:700;margin:4px 0 8px;color:var(--txt)}
+  .sub-card .status-dot{
+    width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;
+  }
+  .sub-card .meta{font-size:11px;color:var(--sub);line-height:1.5}
+  .status-active .status-dot{background:var(--good);box-shadow:0 0 8px var(--good)}
+  .status-idle .status-dot{background:var(--idle)}
+  .status-blocked .status-dot{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+  .status-pending .status-dot{background:var(--xhs);box-shadow:0 0 8px var(--xhs)}
+  .status-line{font-size:11px;color:var(--sub);display:flex;align-items:center;margin-top:4px}
+  /* Flow arrow */
+  .flow{
+    background:var(--card2);border:1px dashed var(--line);border-radius:12px;
+    padding:14px 18px;margin:14px 0;font-size:13px;color:var(--sub);
+    font-family:"JetBrains Mono",Consolas,monospace;
+  }
+  /* Task queue */
+  .task-list{display:grid;gap:8px;margin:10px 0}
+  .task-row{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:10px 14px;display:grid;grid-template-columns:60px 70px 1fr 100px;
+    gap:10px;align-items:center;font-size:13px;
+  }
+  @media(max-width:680px){.task-row{grid-template-columns:60px 1fr;gap:6px}.task-row .pri,.task-row .time{display:none}}
+  .task-row .id-tag{
+    font-weight:900;font-size:11px;padding:3px 6px;border-radius:6px;text-align:center;
+  }
+  .id-U{background:rgba(245,166,35,.2);color:var(--warn);border:1px solid rgba(245,166,35,.4)}
+  .id-A{background:rgba(79,157,255,.2);color:var(--quant);border:1px solid rgba(79,157,255,.4)}
+  .id-B{background:rgba(6,214,160,.2);color:var(--content);border:1px solid rgba(6,214,160,.4)}
+  .id-M{background:rgba(255,36,66,.2);color:var(--xhs);border:1px solid rgba(255,36,66,.4)}
+  .pri{font-size:11px;color:var(--sub);text-align:center;font-weight:700}
+  .pri-P0{color:var(--bad)}
+  .pri-P1{color:var(--warn)}
+  .pri-P2{color:var(--sub)}
+  .task-row .title{color:var(--txt)}
+  .task-row .time{color:var(--sub);font-size:11px;text-align:right}
+  /* Callouts */
+  .callout{
+    border-radius:12px;padding:14px 18px;margin:14px 0;
+    border:1px solid;
+  }
+  .callout.blocked{background:#1f1a0e;border-color:#5a4020;color:#ffd98c}
+  .callout.recommend{background:#0e1a14;border-color:#1f5a36;color:#a8e7c2}
+  .callout b{color:#fff}
+  ul{margin:6px 0 6px 20px}
+  ul li{margin:3px 0;font-size:13.5px}
+  code{
+    background:#0a0c10;padding:1px 6px;border-radius:4px;
+    font-family:"JetBrains Mono",Consolas,monospace;font-size:12px;color:#9ad;
+  }
+  .footnote{color:var(--sub);font-size:12px;border-top:1px solid var(--line);margin-top:30px;padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="top">
+    <h1>🤖 <span class="red">Multi-Agent Dashboard</span></h1>
+    <div class="meta">小李的 AI 工厂 · 双层多 agent 协调框架 v1 · 更新 2026-05-21</div>
+  </div>
+
+  <!-- GOALS -->
+  <h2>🎯 双终极目标 · 进度</h2>
+  <div class="goals">
+    <div class="goal">
+      <div class="title">目标 1 · 实盘可用的最优量化策略</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+      <div class="status">S12 OOS PASS / 整体 Gate1 FAIL → forward paper <code>1/40</code> 交易日</div>
+      <div class="next">下一步阻塞：等真实日历时间累积（≈ 2 个月）</div>
+    </div>
+    <div class="goal">
+      <div class="title">目标 2 · 自媒体涨粉 + 变现</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div>
+      <div class="status">内容资产 7 件齐 · 实际发布 <code>0/N</code></div>
+      <div class="next">下一步阻塞：用户注册公众号 + 4 平台占位 + 发首篇</div>
+    </div>
+  </div>
+
+  <!-- AGENT A -->
+  <h2>🧪 Agent A · 量化探索 <span class="agent-tag tag-quant">7 sub-agents</span></h2>
+
+  <div class="agents">
+    <div class="sub-card quant status-idle">
+      <div class="id">A1</div>
+      <div class="name">策略发现</div>
+      <div class="meta">已扫 12 候选<br>S9-S13 已跑完</div>
+      <div class="status-line"><span class="status-dot"></span>idle / 待用户触发</div>
+    </div>
+    <div class="sub-card quant status-idle">
+      <div class="id">A2</div>
+      <div class="name">数据探针</div>
+      <div class="meta">baostock+sina<br>fallback 齐</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card quant status-idle">
+      <div class="id">A3</div>
+      <div class="name">策略实现</div>
+      <div class="meta">13 策略<br>全部实现</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card quant status-idle">
+      <div class="id">A4</div>
+      <div class="name">Gate1 验证</div>
+      <div class="meta">13/13 跑完<br>1 OOS PASS</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card quant status-active">
+      <div class="id">A5</div>
+      <div class="name">Paper 监控</div>
+      <div class="meta">S12 forward<br>NAV 10000 · day 1</div>
+      <div class="status-line"><span class="status-dot"></span>🟢 active</div>
+    </div>
+    <div class="sub-card quant status-blocked">
+      <div class="id">A6</div>
+      <div class="name">组合合成</div>
+      <div class="meta">S11/S13 已试<br>暂停防 p-hack</div>
+      <div class="status-line"><span class="status-dot"></span>blocked</div>
+    </div>
+    <div class="sub-card quant status-idle">
+      <div class="id">A7</div>
+      <div class="name">反诈沉淀</div>
+      <div class="meta">checklist 1.48万字<br>9 类 FAIL 已归</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+  </div>
+
+  <div class="flow">
+A1 发现 → 选 1 个 → A2 数据探针 → A3 实现 → A4 Gate1<br>
+                                                  ↓ FAIL → A7 沉淀
+                                                  ↓ partial PASS ≥2 → A6 合成（谨慎）
+                                                  ↓ 整体 PASS → A5 paper 累积
+  </div>
+
+  <!-- AGENT B -->
+  <h2>📺 Agent B · 自媒体挖掘 <span class="agent-tag tag-content">6 sub-agents</span></h2>
+
+  <div class="agents" style="grid-template-columns:repeat(6,1fr)">
+    <div class="sub-card content status-idle">
+      <div class="id">B1</div>
+      <div class="name">热点抓取</div>
+      <div class="meta">杨永兴/二八<br>已扫</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card content status-idle">
+      <div class="id">B2</div>
+      <div class="name">角度匹配</div>
+      <div class="meta">S1 反差型<br>已匹配</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card content status-idle">
+      <div class="id">B3</div>
+      <div class="name">内容生产</div>
+      <div class="meta">S1 6图+HTML<br>已成稿</div>
+      <div class="status-line"><span class="status-dot"></span>idle / 待"出 SX"</div>
+    </div>
+    <div class="sub-card content status-idle">
+      <div class="id">B4</div>
+      <div class="name">发布运营</div>
+      <div class="meta">publishing kit<br>含一键复制</div>
+      <div class="status-line"><span class="status-dot"></span>idle</div>
+    </div>
+    <div class="sub-card content status-blocked">
+      <div class="id">B5</div>
+      <div class="name">反馈闭环</div>
+      <div class="meta">skill §6<br>(空)</div>
+      <div class="status-line"><span class="status-dot"></span>blocked: 无反馈</div>
+    </div>
+    <div class="sub-card content status-blocked">
+      <div class="id">B6</div>
+      <div class="name">变现漏斗</div>
+      <div class="meta">设计完成<br>等公众号</div>
+      <div class="status-line"><span class="status-dot"></span>blocked: 公众号未注册</div>
+    </div>
+  </div>
+
+  <div class="flow">
+A4 出新 FAIL → B1 看热点 → B2 匹配 angle → B3 出 HTML+6 图<br>
+                                                          ↓<br>
+                                                B4 合规 + 文案<br>
+                                                          ↓<br>
+                                                  [用户发布]<br>
+                                                          ↓<br>
+                                                B5 反馈 → 改进 skill §6<br>
+                                                          ↓<br>
+                                                B6 漏斗 → 公众号 → 星球 → 课程
+  </div>
+
+  <!-- BLOCKERS -->
+  <h2>🚧 当前阻塞点</h2>
+
+  <div class="callout blocked">
+    <b>🔴 用户阻塞型（必须你做，Claude 替代不了）</b>
+    <ul>
+      <li><b>U-1 P0</b>：注册微信公众号「小李的 AI 工厂」+ 设关键词"扒穿"自动回复 · 10 min</li>
+      <li><b>U-2 P0</b>：小红书/知乎/B站/微博同名占位 · 15 min</li>
+      <li><b>U-3 P0</b>：发首篇小红书（S1 杨永兴反诈，素材全齐）· 30 min</li>
+      <li><b>U-4 P1</b>：配 forward paper cron（按 <code>scripts/cron_install.md</code>）· 5 min</li>
+      <li><b>U-5 P1</b>：给我 3 个"待开发项目"方向（profile placeholder）· 5 min</li>
+    </ul>
+  </div>
+
+  <div class="callout blocked">
+    <b>🟡 时间阻塞型（无法加速，只能等）</b>
+    <ul>
+      <li><b>A5</b>：forward paper 等 ≥40 交易日 · 当前 1/40 · ETA 2026-07-15</li>
+      <li><b>A1</b>：等 forward paper 有 ≥1 个完整 cycle 后再考虑新策略</li>
+    </ul>
+  </div>
+
+  <!-- TASK QUEUE -->
+  <h2>📋 任务队列（自动调度可推进的）</h2>
+
+  <div class="task-list">
+    <div class="task-row">
+      <div class="id-tag id-B">B-1</div>
+      <div class="pri pri-P1">P1</div>
+      <div class="title">出 S5 小市值"圣杯"翻车小红书图集（6 图 + HTML + 文案）</div>
+      <div class="time">用户说"出 S5"</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-B">B-2</div>
+      <div class="pri pri-P1">P1</div>
+      <div class="title">出 S6 双均线翻车小红书图集</div>
+      <div class="time">用户说"出 S6"</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-B">B-3</div>
+      <div class="pri pri-P1">P1</div>
+      <div class="title">出 S7 涨停打板小红书图集</div>
+      <div class="time">用户说"出 S7"</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-B">B-4</div>
+      <div class="pri pri-P1">P1</div>
+      <div class="title">出 S12 跨大类 RP 正面方法论小红书图集</div>
+      <div class="time">用户说"出 S12"</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-B">B-6</div>
+      <div class="pri pri-P2">P2</div>
+      <div class="title">写公众号长文「30 分钟搭你的回测框架」（教学型转折点）</div>
+      <div class="time">2 小时</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-A">A-1</div>
+      <div class="pri pri-P2">P2</div>
+      <div class="title">forward paper 累积 ≥10 天后首次中间 review</div>
+      <div class="time">2026-06-04</div>
+    </div>
+    <div class="task-row">
+      <div class="id-tag id-M">M-1</div>
+      <div class="pri pri-P1">P1</div>
+      <div class="title">B5 拿到首发反馈后写回 xhs-data-content skill §6</div>
+      <div class="time">等反馈</div>
+    </div>
+  </div>
+
+  <!-- RECOMMEND -->
+  <h2>🎯 下一轮 Claude 决策推荐</h2>
+  <div class="callout recommend">
+    <b>🤖 你说"继续推进"或"下一轮"时，Claude 会自动：</b>
+    <ol style="padding-left:20px">
+      <li>读 <code>STATE.md</code> + <code>TASK_QUEUE.md</code> + 你这条消息</li>
+      <li>判断 A 域 / B 域当前阻塞点</li>
+      <li>当前实际可推进的只有 <b>B-1 ~ B-4</b>（出小红书图集），且需要你说具体哪个 SX</li>
+      <li>用户阻塞型 U-1 ~ U-5 是 Claude 做不了的，会主动提醒你</li>
+      <li>如果你都不指明 → Claude 默认推荐做 B-1（按 TASK_QUEUE 优先级取）</li>
+    </ol>
+  </div>
+
+  <h2>🔧 触发 orchestrator 的关键词</h2>
+  <div class="callout recommend">
+    任何一句都会触发 <code>qc-orchestrator</code> skill：
+    <ul>
+      <li>"继续推进" / "下一轮" / "推进项目"</li>
+      <li>"做内容" → 跳过 A 直接到 B 决策</li>
+      <li>"做量化" → 跳过 B 直接到 A 决策</li>
+      <li>"出 S5 图集" / "出 S12 图集" → 直接 dispatch B3</li>
+      <li>"orchestrate" / "multi agent" / "拆 agent 干"</li>
+    </ul>
+  </div>
+
+  <h2>📁 框架相关文件</h2>
+  <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px">
+    <tr><td style="padding:6px 0;color:var(--sub);width:340px"><code>reports/multi_agent_framework.md</code></td><td>架构总文档（8 节，含护栏）</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>reports/STATE.md</code></td><td>项目状态机（Claude 单点维护）</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>reports/TASK_QUEUE.md</code></td><td>优先级排序待办</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>~/.claude/skills/qc-orchestrator/SKILL.md</code></td><td>触发关键词调用调度器</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>~/.claude/skills/xhs-data-content/SKILL.md</code></td><td>B3 内容生产 skill</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>reports/sanity_review.md</code></td><td>8+ 检查点累积（防 p-hacking）</td></tr>
+    <tr><td style="padding:6px 0;color:var(--sub)"><code>SPEC.md §0</code></td><td>不可违反的项目铁律</td></tr>
+  </table>
+
+  <div class="footnote">
+    版本 v1 · 2026-05-21 · 详细架构参见 <code>multi_agent_framework.md</code><br>
+    GitHub：<a style="color:var(--quant)" href="https://github.com/xiaoli-ai-factory/trade">xiaoli-ai-factory/trade</a>
+  </div>
+
+</div>
+</body>
+</html>

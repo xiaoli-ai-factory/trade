@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>小李的 AI 工厂 · 进展与下一步</title>
+<style>
+  :root{
+    --bg:#0f1115;--card:#171a21;--card2:#1d212b;--line:#2a2f3a;
+    --txt:#e6e8ee;--sub:#9aa3b2;--xhs:#FF2442;
+    --good:#3ecf8e;--warn:#f5a623;--bad:#ef5b5b;--accent:#4f9dff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--txt);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;padding:32px 18px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  .top{
+    background:linear-gradient(135deg,#1f2330,#171a21);
+    border:1px solid var(--line);border-radius:18px;padding:28px 30px;margin-bottom:30px;
+  }
+  h1{font-size:26px;font-weight:900;letter-spacing:.5px}
+  h1 .red{color:var(--xhs)}
+  .sub{color:var(--sub);font-size:13.5px;margin-top:8px}
+  .part-tag{
+    display:inline-block;background:var(--xhs);color:#fff;
+    padding:4px 14px;border-radius:18px;font-size:13px;font-weight:700;
+    margin-bottom:14px;
+  }
+  h2{
+    font-size:22px;font-weight:800;margin:42px 0 16px;
+    padding-left:14px;border-left:5px solid var(--xhs);
+  }
+  h3{font-size:17px;font-weight:700;margin:20px 0 10px}
+  p{font-size:14.5px;margin:8px 0}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin:14px 0;
+  }
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--card2);color:#fff;font-weight:700}
+  tr:nth-child(even) td{background:#14171e}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .fail{color:var(--bad);font-weight:700}
+  .pass{color:var(--good);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .verdict{
+    border-radius:14px;padding:18px 22px;margin:16px 0;border:2px solid;
+    font-size:15px;
+  }
+  .verdict.red{background:#1f0e10;border-color:#5a2024;color:#ffb3b8}
+  .verdict.yellow{background:#1f1a0e;border-color:#5a4020;color:#ffd98c}
+  .verdict.green{background:#0e1a14;border-color:#1f5a36;color:#a8e7c2}
+  .verdict b{color:#fff;font-size:17px;display:block;margin-bottom:8px}
+  .traffic{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0;
+  }
+  .light{
+    background:var(--card);border:2px solid var(--line);border-radius:14px;
+    padding:18px;text-align:center;
+  }
+  .light .dot{
+    width:36px;height:36px;border-radius:50%;margin:0 auto 10px;
+  }
+  .light.red{border-color:rgba(239,91,91,.5)}
+  .light.red .dot{background:var(--bad);box-shadow:0 0 16px var(--bad)}
+  .light.yellow{border-color:rgba(245,166,35,.5)}
+  .light.yellow .dot{background:var(--warn);box-shadow:0 0 16px var(--warn)}
+  .light.green{border-color:rgba(62,207,142,.5)}
+  .light.green .dot{background:var(--good);box-shadow:0 0 16px var(--good)}
+  .light .name{font-weight:800;font-size:15px;margin-bottom:4px}
+  .light .desc{font-size:12.5px;color:var(--sub)}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+  @media(max-width:760px){.stat-row{grid-template-columns:repeat(2,1fr)};.traffic{grid-template-columns:1fr}}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px;text-align:center;
+  }
+  .stat .num{font-size:24px;font-weight:900;color:var(--xhs)}
+  .stat .label{color:var(--sub);font-size:12px;margin-top:4px}
+  .stat.good .num{color:var(--good)}
+  .stat.warn .num{color:var(--warn)}
+  .stat.bad .num{color:var(--bad)}
+  ul{margin:8px 0 8px 22px}
+  ul li{margin:5px 0;font-size:14px}
+  /* TODO list */
+  .todo-list{margin:14px 0;padding:0;list-style:none}
+  .todo-item{
+    display:grid;grid-template-columns:40px 1fr;gap:14px;
+    padding:14px 16px;border:1px solid var(--line);border-radius:10px;margin:8px 0;
+    background:var(--card);
+  }
+  .todo-item .num{
+    background:var(--xhs);color:#fff;width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;
+  }
+  .todo-item.done .num{background:var(--good)}
+  .todo-item.done .title{text-decoration:line-through;opacity:.6}
+  .todo-item .title{font-weight:700;font-size:15px}
+  .todo-item .meta{font-size:12.5px;color:var(--sub);margin-top:4px}
+  .todo-item .meta .tag{
+    display:inline-block;background:var(--card2);color:var(--sub);
+    padding:1px 8px;border-radius:8px;font-size:11px;margin-right:6px;
+  }
+  .todo-item .body{margin-top:6px;font-size:13.5px;color:var(--txt)}
+  code{
+    background:#0a0c10;padding:1px 6px;border-radius:4px;
+    font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;color:#9ad;
+  }
+  .footnote{color:var(--sub);font-size:12px;border-top:1px solid var(--line);margin-top:32px;padding-top:14px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- TOP HEADER -->
+  <div class="top">
+    <h1>🏭 <span class="red">小李的 AI 工厂</span> · 当前进展与下一步</h1>
+    <div class="sub">
+      生成时间 2026-05-20 · 包含两部分：
+      <b style="color:#fff">Part 1 = S12 量化策略可否实盘判断</b> ·
+      <b style="color:#fff">Part 2 = 自媒体路线与 TODO</b>
+    </div>
+  </div>
+
+  <!-- ==================== PART 1 ==================== -->
+  <span class="part-tag">PART 1 / 量化篇</span>
+  <h2>🧪 当前最优策略 S12 · 可否实盘？</h2>
+
+  <!-- 总判定红绿黄灯 -->
+  <div class="traffic">
+    <div class="light red">
+      <div class="dot"></div>
+      <div class="name">❌ 全仓实盘</div>
+      <div class="desc">禁止</div>
+    </div>
+    <div class="light yellow">
+      <div class="dot"></div>
+      <div class="name">⚠️ 小额试盘</div>
+      <div class="desc">条件性可行</div>
+    </div>
+    <div class="light green">
+      <div class="dot"></div>
+      <div class="name">✅ 继续 Paper</div>
+      <div class="desc">最稳妥</div>
+    </div>
+  </div>
+
+  <!-- 现状速览 -->
+  <h3>S12 当前真实状态</h3>
+  <div class="stat-row">
+    <div class="stat good"><div class="num">+12.01%</div><div class="label">OOS 收益</div></div>
+    <div class="stat good"><div class="num">14.07</div><div class="label">OOS PF（仅此一项远超阈值）</div></div>
+    <div class="stat warn"><div class="num">-12.25%</div><div class="label">A bear 段亏损</div></div>
+    <div class="stat bad"><div class="num">FAIL</div><div class="label">整体 Gate1</div></div>
+  </div>
+
+  <!-- 核心诚实判定 -->
+  <div class="verdict red">
+    <b>🛑 不建议立即用真金实盘的 4 个硬理由</b>
+    <ul>
+      <li><b>整体 Gate1 仍 FAIL</b>：S12 仅 OOS PASS，但 A bear -12.25% 没过 expectancy&gt;0 + PF≥1.3 闸门——按项目预定纪律不算"通过的策略"</li>
+      <li><b>OOS PF 14.07 可能有运气成分</b>：2024-10 至 2026-05 是海外（纳指/标普）+ 黄金大涨周期，恰好把 A 股震荡完美对冲。下次熊市来时这种对冲红利不一定还在</li>
+      <li><b>Forward paper 才启动 1 个交易日</b>：NAV 仍 10000，无任何实战累积。把"backtest OOS PASS"等同于"未来必赚"是经典 over-fitting 心态</li>
+      <li><b>1 万本金 5 元地板费致命</b>：7 只 ETF 月频再平衡，单只约 1400 元 × 5 元 = 单边 0.36%，6 只都调一次 = 约 4% 年化成本，把 S12 backtest 的 12% 收益吃掉 1/3</li>
+    </ul>
+  </div>
+
+  <!-- 三种实操选项 -->
+  <h3>三种实操选项对比</h3>
+  <table>
+    <tr>
+      <th>方案</th><th>资金</th><th>预期收益</th><th>风险</th><th>谁适合</th>
+    </tr>
+    <tr>
+      <td class="pass">✅ A 继续 Paper</td>
+      <td>0 元</td>
+      <td>0（数据累积）</td>
+      <td>无</td>
+      <td><b>所有人首选</b>。等 forward paper ≥40 交易日 + 包含至少一次明显回撤后再决策</td>
+    </tr>
+    <tr>
+      <td class="warn">⚠️ B 小额试盘</td>
+      <td>5-10 万 + 接受全损</td>
+      <td>年化 5-12%（但 backtest 数据不能保证）</td>
+      <td>真实 -12% 回撤 + 海外对冲红利可能消失</td>
+      <td>有学习预算、不靠这笔钱生活、想体验完整链路的人</td>
+    </tr>
+    <tr>
+      <td class="fail">❌ C 全仓实盘</td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+      <td><b>任何场景都不要做</b>。S12 不是合格策略，是"相对最优的 FAIL"</td>
+    </tr>
+  </table>
+
+  <!-- 如果非要小额试盘的规则 -->
+  <div class="verdict yellow">
+    <b>⚠️ 如果一定要小额试盘 B，硬规则（4 条全部满足才能开仓）</b>
+    <ul>
+      <li><b>资金门槛 ≥5 万</b>：让 5 元地板费占单笔 &lt;0.1%</li>
+      <li><b>仓位 ≤ 总资产 20%</b>：S12 即使有效也只是配置工具，不是 all-in 工具</li>
+      <li><b>接受 -15% 回撤的心理准备</b>：backtest bear -12.25% 是历史样本，未来可能更深</li>
+      <li><b>严格月频换仓 + 不主观干预</b>：脚本怎么算就怎么下单，不"觉得这次跌得太多再补一点"</li>
+    </ul>
+  </div>
+
+  <!-- 升级到实盘的成熟度门槛 -->
+  <h3>从 Paper 升到 实盘 的成熟度门槛</h3>
+  <table>
+    <tr><th>条件</th><th>判定标准</th><th>当前进度</th></tr>
+    <tr>
+      <td>Forward paper 交易日累积</td>
+      <td>≥40 个交易日（约 2 个月）</td>
+      <td class="warn">1/40</td>
+    </tr>
+    <tr>
+      <td>Paper NAV 与 backtest 同期偏离</td>
+      <td>&lt; 30%</td>
+      <td>待数据</td>
+    </tr>
+    <tr>
+      <td>跨大类对冲在真实新数据上仍有效</td>
+      <td>2026-Q3 或更晚的市场结构验证</td>
+      <td>待数据</td>
+    </tr>
+    <tr>
+      <td>含一次 ≥5% 回撤的实战经历</td>
+      <td>已发生且策略表现接近 backtest 预期</td>
+      <td>未触发</td>
+    </tr>
+    <tr>
+      <td>用户自己想清楚"亏 10% 我不慌"</td>
+      <td>主观确认</td>
+      <td>待自评</td>
+    </tr>
+  </table>
+
+  <!-- 量化篇结论 -->
+  <div class="verdict green">
+    <b>🎯 量化篇结论一句话</b>
+    现在不实盘，继续 paper。S12 是项目实证下的"相对最优"，但它 <b>"不亏太多" ≠ "稳定赚钱"</b>。
+    真正能 PASS 整体 Gate1 的策略可能不存在于免费数据 + 散户体量的世界里——这是项目最有价值的结论，也是你避免亏钱的最大保护伞。
+  </div>
+
+  <!-- ==================== PART 2 ==================== -->
+  <span class="part-tag">PART 2 / 自媒体篇</span>
+  <h2>📣 自媒体路线与 TODO</h2>
+
+  <!-- 已完成 -->
+  <h3>✅ 已完成的内容资产盘点</h3>
+  <table>
+    <tr><th>类别</th><th>产物</th><th>状态</th></tr>
+    <tr><td>项目代码</td><td><code>github.com/xiaoli-ai-factory/trade</code> 13 策略全部源码 + 报告</td><td class="pass">已 push</td></tr>
+    <tr><td>Profile 首页</td><td><code>github.com/xiaoli-ai-factory</code> README（capsule banner + S1-S7 反诈表 + Reading List）</td><td class="pass">已 push</td></tr>
+    <tr><td>反诈深度文（杨永兴）</td><td>知乎长文 5800 字 + 小红书 6 图 + 发布运营手册（一键复制）</td><td class="pass">已成稿</td></tr>
+    <tr><td>反诈 Checklist 元文档</td><td>1.48 万字（11 验证问题 + 4 致命偏差 + 7 营销话术 + 8 回测铁律）</td><td class="pass">已写</td></tr>
+    <tr><td>终局综合报告</td><td>7500 字（13 策略完整复盘 + 三层发现 + 散户终局建议）</td><td class="pass">已写</td></tr>
+    <tr><td>Hub 控制塔</td><td><code>reports/hub/index_embedded.html</code> 一站式（含 6 图 base64 嵌入）</td><td class="pass">已建</td></tr>
+    <tr><td>xhs-data-content skill</td><td>未来任何反诈内容 30 分钟自动出 HTML+图</td><td class="pass">已封装</td></tr>
+  </table>
+
+  <!-- 立即 TODO -->
+  <h3>🔥 立即 TODO（本周做完）</h3>
+  <ol class="todo-list">
+    <li class="todo-item">
+      <div class="num">1</div>
+      <div>
+        <div class="title">注册微信公众号「小李的 AI 工厂」</div>
+        <div class="meta"><span class="tag">10 分钟</span><span class="tag">阻塞型</span><span class="tag">你做</span></div>
+        <div class="body">所有平台 CTA 都引向公众号，没有这个 = 全部漏斗失效。 <code>mp.weixin.qq.com</code> 注册个人订阅号 →
+        设关键词「扒穿」→ 自动回复 GitHub 链接 + 资料包。</div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">2</div>
+      <div>
+        <div class="title">小红书 / 知乎 / B 站 / 微博 同名占位</div>
+        <div class="meta"><span class="tag">15 分钟</span><span class="tag">阻塞型</span><span class="tag">你做</span></div>
+        <div class="body">所有平台搜索「小李的 AI 工厂」注册占位，简介统一写"AI 工程师 · 用代码扒穿量化神话 · 不卖荐股"。
+        不发内容也要先占位（防止恶意抢注影响品牌一致性）。</div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">3</div>
+      <div>
+        <div class="title">发首篇小红书：杨永兴尾盘法实测翻车</div>
+        <div class="meta"><span class="tag">30 分钟</span><span class="tag">价值最高</span><span class="tag">你做</span></div>
+        <div class="body">
+          素材全齐：① 打开 <code>reports/xiaohongshu_yangyongxing_refute_embedded.html</code> 滚动截屏 6 张；
+          ② 打开 <code>reports/hub/index_embedded.html</code> 的"小红书"区，一键复制标题/正文/标签；
+          ③ 按发布顺序：封面 → 胜率对比 → 四段收益 → 触发频率 → 对照组 → Gate1 盖章。
+          <br><b>发布前注意</b>：检查正文是否含违规词（公众号/微信/扫码），合规版已自动剔除。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">4</div>
+      <div>
+        <div class="title">配 forward paper cron（让 S12 模拟盘自动累积）</div>
+        <div class="meta"><span class="tag">5 分钟</span><span class="tag">技术型</span><span class="tag">你本地配</span></div>
+        <div class="body">
+          按 <code>scripts/cron_install.md</code> 操作。每个交易日 16:00 自动跑 paper/runner.py。
+          这步不做 → 数据不累积 → 永远没法升到 Gate2。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">5</div>
+      <div>
+        <div class="title">给我 3 个"待开发项目"方向，我替换 profile README placeholder</div>
+        <div class="meta"><span class="tag">5 分钟</span><span class="tag">协作型</span><span class="tag">你告诉我</span></div>
+        <div class="body">
+          profile README 里 3 个项目卡是占位符。建议方向（任选/组合）：
+          ① AI 房贷计算器 ② AI 消费分析助手 ③ 公众号阅读 Agent ④ AI 简历优化器 ⑤ AI 论文阅读伴侣。
+          告诉我 3 个 + 一句话定位，我立刻填好重 push。
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <!-- 中期 TODO -->
+  <h3>📅 中期 TODO（本月做完）</h3>
+  <ol class="todo-list">
+    <li class="todo-item">
+      <div class="num">6</div>
+      <div>
+        <div class="title">发首篇知乎长文（5800 字 + 代码）</div>
+        <div class="meta"><span class="tag">1 小时</span><span class="tag">长尾流量</span></div>
+        <div class="body">
+          打开 <code>reports/zhihu_yangyongxing_article.html</code> 全选复制到知乎专栏编辑器。
+          知乎一篇好内容能跑 5 年长尾流量+SEO，价值 &gt; 小红书 100 篇。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">7</div>
+      <div>
+        <div class="title">建微信学习群 + 每周更新二维码</div>
+        <div class="meta"><span class="tag">持续</span><span class="tag">私域</span></div>
+        <div class="body">
+          建群 → 二维码截图保存为 <code>assets/wechat-group.png</code> → 每周日 22:00 更新 push 到
+          <code>xiaoli-ai-factory/xiaoli-ai-factory</code> 仓库。
+          微信群二维码 7 天过期是平台规则,这条无解只能定期更新。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">8</div>
+      <div>
+        <div class="title">小红书发反诈系列 S4-S7（4 篇）</div>
+        <div class="meta"><span class="tag">4 周节奏</span><span class="tag">内容矩阵</span></div>
+        <div class="body">
+          每周 1 篇，主题：二八轮动翻车 / 小市值"圣杯"翻车 / 双均线翻车 / 涨停打板翻车。
+          数据全齐，跟我说"出 S4 图集"，<code>xhs-data-content</code> skill 30 分钟自动出 6 图 + HTML + 文案。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">9</div>
+      <div>
+        <div class="title">写第 1 篇教学型公众号长文</div>
+        <div class="meta"><span class="tag">2 小时</span><span class="tag">变现伏笔</span></div>
+        <div class="body">
+          主题：<b>「30 分钟用 Claude Code + Codex 搭你自己的回测框架」</b>—— 这是内容矩阵第 3 期，
+          也是"教学变现"心智的起点。从反诈定位转向"教你做"，是粉丝变现的关键转折。
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <!-- 长期 TODO -->
+  <h3>🎯 长期 TODO（3 个月内启动）</h3>
+  <ol class="todo-list">
+    <li class="todo-item">
+      <div class="num">10</div>
+      <div>
+        <div class="title">B 站视频版（30 分钟带你复现一套实测）</div>
+        <div class="meta"><span class="tag">1-2 周</span><span class="tag">天花板高</span></div>
+        <div class="body">
+          屏幕录制 + 配音 + 简单剪辑。AI 教学类视频在 B 站变现天花板最高（卖课/接广告/充电）。
+          第一支视频建议直接演示"用 Claude Code 30 分钟搭杨永兴反诈回测"，跟公众号长文呼应。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">11</div>
+      <div>
+        <div class="title">知识星球付费入口（49-199/年）</div>
+        <div class="meta"><span class="tag">变现起点</span></div>
+        <div class="body">
+          有 500+ 真粉后开。星球内容：项目代码 + 项目复盘 + 月度选题 + 答疑。
+          这是非"咨询"的 scaling 变现方式（一次内容服务 N 个人）。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">12</div>
+      <div>
+        <div class="title">「AI 编程 8 周陪跑营」付费课程（999-2999）</div>
+        <div class="meta"><span class="tag">深度变现</span></div>
+        <div class="body">
+          有 5000+ 真粉 + B 站铺垫后开。8 周每周一个 AI 实战项目，包括量化回测/Agent/App 构建。
+          这是项目终极变现路径——把"教不懂编程的人做工具"的定位落地为可复用产品。
+        </div>
+      </div>
+    </li>
+    <li class="todo-item">
+      <div class="num">13</div>
+      <div>
+        <div class="title">Forward paper 每月做一次"对账复盘"</div>
+        <div class="meta"><span class="tag">长期</span><span class="tag">量化层</span></div>
+        <div class="body">
+          每月底跟我说"复盘 S12 forward 这个月"，我会基于 <code>paper/dashboard.md</code> 数据
+          算 NAV / 与 backtest 偏离 / 哪些月末换仓符合预期 / 哪些不符合，
+          这本身又是一期内容素材，且持续 Gate2 验证。
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <!-- 简要的"我需要你做什么" -->
+  <h3>🤝 你的下一个动作（按时间排序）</h3>
+  <ol style="padding-left:22px;font-size:14.5px;line-height:2">
+    <li>今天：注册公众号 + 4 平台同名占位（30 分钟）</li>
+    <li>今天/明天：发首篇小红书（截屏 6 图就发，30 分钟）</li>
+    <li>本周：配 cron + 告诉我 3 个待开发项目方向</li>
+    <li>本月：发知乎长文 + 建群 + 小红书 4 篇反诈系列</li>
+    <li>下月：B 站第一支视频</li>
+    <li>3 个月后：知识星球付费入口</li>
+  </ol>
+
+  <!-- 风险/防迷失提醒 -->
+  <h3>⚠️ 防迷失提醒</h3>
+  <div class="card">
+    <p>这个项目最大的风险不是"找不到圣杯量化策略"——而是：</p>
+    <ul>
+      <li><b>过度做内容、不做变现漏斗</b>：发了 10 篇小红书但没公众号 = 0 转化</li>
+      <li><b>不耐烦、回头改 backtest 拼凑 PASS</b>：项目 13 策略全 FAIL 是最值钱的诚实，不要为了"有个 PASS 给粉丝看"回头调参</li>
+      <li><b>用 1 万实盘 S12 觉得"反正是模拟出来的数据"</b>：5 元地板费 + bear 段 -12% 真实存在</li>
+      <li><b>开始接金融广告</b>：粉丝积累到 1000+ 会有人来邀，**死线 = 不接**，否则反诈定位崩塌</li>
+    </ul>
+  </div>
+
+  <div class="footnote">
+    本文件基于 reports/ 下全部实证数据生成 ·
+    GitHub: <a style="color:var(--accent)" href="https://github.com/xiaoli-ai-factory/trade">xiaoli-ai-factory/trade</a> ·
+    完整 Hub: <code>reports/hub/index_embedded.html</code> · 生成日期 2026-05-20
+  </div>
+
+</div>
+</body>
+</html>
