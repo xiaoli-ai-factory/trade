@@ -1,0 +1,116 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小红书发布手册 · 红利低波+纳指100 避坑帖</title>
+<style>
+:root{--red:#FF2442;--ink:#1B1B1B;--gray:#666;}
+*{box-sizing:border-box;}
+body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;max-width:780px;margin:0 auto;padding:24px 18px 80px;color:var(--ink);line-height:1.7;background:#fafafa;}
+h1{font-size:24px;}h2{font-size:19px;border-left:5px solid var(--red);padding-left:10px;margin-top:30px;}
+.card{background:#fff;border-radius:14px;padding:16px 18px;margin:12px 0;box-shadow:0 6px 18px rgba(0,0,0,.05);}
+.copy{position:relative;}
+.copy pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:14.5px;background:#fbfbfb;border:1px solid #eee;border-radius:8px;padding:14px;margin:8px 0 0;}
+.btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn:active{transform:scale(.97);}
+.title-opt{border:1px dashed #ddd;border-radius:8px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.title-opt span{font-size:15px;font-weight:600;}
+.tag{display:inline-block;background:#FFF0F3;color:var(--red);border-radius:6px;padding:3px 9px;margin:3px;font-size:13px;}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0;}
+.grid img{width:100%;border:1px solid #eee;border-radius:6px;}
+.warn{background:#FFF8D9;border-left:4px solid #FFD93D;padding:12px 14px;border-radius:6px;font-size:14px;}
+table{border-collapse:collapse;width:100%;font-size:14px;}td,th{border:1px solid #eee;padding:7px 9px;text-align:left;}th{background:#FFF0F3;}
+.note{font-size:12.5px;color:var(--gray);}
+.ok{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#06D6A0;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;display:none;z-index:99;}
+</style></head><body>
+<h1>📕 小红书发布手册 · 「红利低波+纳指100」避坑帖</h1>
+<p class="note">angle：避坑型（蹭 2026-05 纳指100 QDII 溢价热点）· 数字全部来自 backtest/personal_div_ndx_eval.py 与公开公告 · 不卖课不荐股</p>
+
+<div class="warn"><b>⚠️ 期待管理（来自上次实测教训）：</b>上一篇量化反诈帖在小红书只有 16 阅读、0 互动。结论是量化/金融硬核在小红书是小众赛道、新号冷启动难。本篇已尽量生活化（共情口吻、亮色图、避深色数据表），但<b>这类内容的主场其实是知乎/B站</b>。小红书可作引流试水，别押全部期待。</div>
+
+<h2>① 三个备选标题（点按钮复制）</h2>
+<div class="card">
+<div class="title-opt"><span>我也在定投「红利低波+纳指100」，但这2个坑差点让我多亏钱</span><button class="btn" onclick="cp(this,'我也在定投「红利低波+纳指100」，但这2个坑差点让我多亏钱')">复制</button></div>
+<div class="title-opt"><span>全网吹的「红利低波+纳指躺赚」，我回测7年发现2个坑</span><button class="btn" onclick="cp(this,'全网吹的「红利低波+纳指躺赚」，我回测7年发现2个坑')">复制</button></div>
+<div class="title-opt"><span>现在别急着买纳指100！5月多只QDII发溢价警告（附数据）</span><button class="btn" onclick="cp(this,'现在别急着买纳指100！5月多只QDII发溢价警告（附数据）')">复制</button></div>
+<p class="note">推荐第 1 条（第一人称共情，最不像广告，小红书友好）。</p>
+</div>
+
+<h2>② 正文（点按钮一键复制）</h2>
+<div class="card copy">
+<button class="btn" onclick="cpPre(this)">📋 复制全文</button>
+<pre id="body">最近刷到好多人吹「红利低波+纳指100」极简组合，说躺着赚、稳稳的幸福🥰
+我自己也在定投这套，于是用7年真实数据跑了一遍回测，结果发现2个坑，差点让我多亏钱👇
+
+🚨 坑①：「持有2年100%赚」是假象
+回测确实显示：随便哪天买入、持有2年几乎没亏过，持有1年也有91%赚。
+但数据只有7年、还几乎全是牛市，真正「独立的3年时间段」只有2-3个，样本太少。
+意思是：过去没遇到过长期大熊市，≠未来一定稳赚。
+👉「长期大概率赚」可以信，「100%稳赚」别当真。
+
+🚨 坑②：现在买纳指100，先看「溢价」！
+就在2026年5月，华夏/富国/招商/嘉实/华泰柏瑞等多只纳指100 QDII接连发「溢价风险提示公告」，溢价率10%+。
+溢价=场内价比真实净值贵的部分，买在高溢价=多付一笔智商税，将来溢价回落会吃掉你的收益。
+👉 买之前一定看当天溢价率，超过3~5%就少买、或换一只额度充足的。
+
+那到底怎么买？我跑出来的真相是：
+其实「逢低买」和「无脑定投」差距很小（1.86倍 vs 1.92倍），别神化抄底，更别攒着钱赌「更大的跌」——跌20%才买那种，有15%的钱一整年没投出去、踏空了上涨。
+
+记住3步就够：
+① 定投打底：每月固定一笔，50/50，别停别择时
+② 大跌加码：跌超10%再额外加，买跌得更深的那个
+③ 买纳指看溢价，长期持有、平时别瞎操作
+
+这套组合本身没毛病（两个东西不太同涨同跌、能互相对冲），坑在「以为稳赚」和「无脑追高溢价」。
+数字都来自我自己的回测代码，能自己验，不卖课不荐股~
+
+关注我，每周用真实数据扒一个理财神话，帮你少交一次智商税💪
+（历史表现不代表未来，非投资建议）</pre>
+</div>
+
+<h2>③ 标签（点复制）</h2>
+<div class="card copy">
+<button class="btn" onclick="cp(this,'#红利低波 #纳斯达克100 #纳指100 #定投 #ETF定投 #理财避坑 #投资理财 #基金定投 #量化投资 #普通人理财')">复制全部标签</button>
+<div style="margin-top:8px;">
+<span class="tag">#红利低波</span><span class="tag">#纳斯达克100</span><span class="tag">#纳指100</span><span class="tag">#定投</span><span class="tag">#ETF定投</span><span class="tag">#理财避坑</span><span class="tag">#投资理财</span><span class="tag">#基金定投</span><span class="tag">#量化投资</span><span class="tag">#普通人理财</span>
+</div></div>
+
+<h2>④ 发布顺序（5 张图）</h2>
+<div class="card">
+<div class="grid">
+<img src="../figs/div_ndx/fig1_cover.png" alt="封面"><img src="../figs/div_ndx/fig2_pit1.png" alt="坑1"><img src="../figs/div_ndx/fig3_pit2.png" alt="坑2"><img src="../figs/div_ndx/fig4_howto.png" alt="怎么买"><img src="../figs/div_ndx/fig5_verdict.png" alt="总结">
+</div>
+<table><tr><th>顺序</th><th>图</th><th>作用</th></tr>
+<tr><td>1</td><td>fig1_cover</td><td>封面：钩子+2个坑预告（首图决定点击率）</td></tr>
+<tr><td>2</td><td>fig2_pit1</td><td>坑①：100%胜率是7年牛市假象</td></tr>
+<tr><td>3</td><td>fig3_pit2</td><td>坑②：QDII溢价（蹭5月热点）</td></tr>
+<tr><td>4</td><td>fig4_howto</td><td>正确做法：逢低≈定投+3步</td></tr>
+<tr><td>5</td><td>fig5_verdict</td><td>总结+关注引导</td></tr>
+</table></div>
+
+<h2>⑤ 作者人设 / 引流（已避平台违规红线）</h2>
+<div class="card">
+<p><b>主页签名：</b>「用真实数据扒理财神话 · 回测代码全开源 · 不荐股不卖课」</p>
+<p><b>合规 CTA（已写进正文+图5）：</b></p>
+<ul>
+<li>全网同名「[你的ID占位]」，知乎/B站都能搜到我</li>
+<li>「评论区扣『数据』，我私信发你回测代码地址」（暗号合规，不放外链）</li>
+<li>GitHub 仓库地址放主页置顶笔记（不在正文出现外站平台名）</li>
+</ul>
+<p class="note">❌ 不要在正文/评论放二维码、微信号、外链——小红书会限流。</p>
+</div>
+
+<h2>⑥ 文件清单</h2>
+<div class="card"><pre style="background:#1B1B1B;color:#0f0;border:none;">reports/figs/div_ndx/fig1_cover.png   封面
+reports/figs/div_ndx/fig2_pit1.png    坑① 稳赚假象
+reports/figs/div_ndx/fig3_pit2.png    坑② QDII溢价
+reports/figs/div_ndx/fig4_howto.png   正确做法
+reports/figs/div_ndx/fig5_verdict.png 总结+CTA
+scripts/make_div_ndx_xhs_figs.py      图脚本(可复跑)
+reports/div_ndx/zhihu.html            知乎完整版(配套)</pre></div>
+
+<div class="ok" id="ok">✓ 已复制</div>
+<script>
+function toast(){var o=document.getElementById('ok');o.style.display='block';setTimeout(function(){o.style.display='none';},1400);}
+function cp(btn,txt){navigator.clipboard.writeText(txt).then(toast).catch(function(){var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast();});}
+function cpPre(btn){cp(btn,document.getElementById('body').innerText);}
+</script>
+</body></html>

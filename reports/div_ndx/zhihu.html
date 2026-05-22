@@ -1,0 +1,90 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>知乎完整版 · 7年数据回测「红利低波+纳指100」</title>
+<style>
+body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;max-width:740px;margin:0 auto;padding:24px 18px 80px;color:#1a1a1a;line-height:1.8;font-size:16px;background:#fff;}
+h1{font-size:25px;line-height:1.4;}h2{font-size:20px;margin-top:34px;border-bottom:1px solid #eee;padding-bottom:6px;}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:15px;}th,td{border:1px solid #e0e0e0;padding:8px 10px;text-align:center;}th{background:#f5f7fa;}td:first-child,th:first-child{text-align:left;}
+blockquote{background:#f7f9fc;border-left:4px solid #1772f6;margin:14px 0;padding:10px 16px;color:#444;}
+.warn{background:#fff8e6;border-left:4px solid #f0a020;padding:10px 16px;border-radius:4px;}
+.usage{background:#eef6ff;border:1px dashed #1772f6;border-radius:8px;padding:12px 16px;font-size:14px;color:#1a4d8f;margin-bottom:20px;}
+code{background:#f2f2f2;padding:1px 5px;border-radius:4px;font-size:14px;}
+strong{color:#1a1a1a;}
+.imgnote{color:#888;font-size:13px;font-style:italic;margin:6px 0;}
+</style></head><body>
+
+<div class="usage">📋 <b>使用方法</b>：在浏览器打开本页 → 全选（Ctrl/Cmd+A）→ 复制 → 粘贴到知乎写文章编辑器。标题、正文、表格会保留；<b>图片需在知乎手动上传</b>（图在 <code>reports/figs/div_ndx/</code>，也可用组合报告里的 4 张大图）。</div>
+
+<h1>我用 7 年真实数据回测了「红利低波 + 纳指 100」这套网红组合：3 个发现 + 2 个坑</h1>
+
+<p>最近「红利低波 + 纳斯达克 100」这套极简组合很火，到处都在说它「攻守兼备、长期躺赚」。我自己也在 A 股场内定投这两只 ETF（红利低波 <strong>512890</strong>、纳指 100 <strong>513100</strong>）。但与其听别人讲故事，不如自己拉数据跑一遍。</p>
+<p>我用前复权日线（红利低波自 2019-01、纳指 100 自 2013-05，到 2026-05）做了回测，回答三个问题：<strong>持有多久才大概率赚？两个搭一起到底合不合理？我「跌了就买」的习惯是不是真的更好？</strong>下面是结论和数据。</p>
+
+<blockquote><strong>一句话结论：</strong>这套框架站得住——长期持有大概率赚、两资产相关性低能互相对冲。但「逢低抄底」被高估了（和定投差不多），而且当下要特别警惕纳指 QDII 的高溢价。</blockquote>
+
+<h2>发现 1：持有越久，赚钱概率越高</h2>
+<p>对历史上<strong>任意一个交易日买入</strong>、持有固定时长后的收益做统计，盈利概率如下：</p>
+<table>
+<tr><th>持有时长</th><th>红利低波</th><th>纳指100</th><th>50/50 组合</th></tr>
+<tr><td>1 个月</td><td>59%</td><td>65%</td><td>67%</td></tr>
+<tr><td>3 个月</td><td>67%</td><td>76%</td><td>72%</td></tr>
+<tr><td>6 个月</td><td>78%</td><td>83%</td><td>86%</td></tr>
+<tr><td>1 年</td><td>96%</td><td>91%</td><td><strong>91%</strong></td></tr>
+<tr><td>2 年</td><td>100%</td><td>96%</td><td><strong>99.9%</strong></td></tr>
+<tr><td>3 年</td><td>100%</td><td>100%</td><td><strong>100%</strong></td></tr>
+</table>
+<p>结论很清楚：短期（1 个月）基本是掷硬币，但<strong>持有 1 年组合有 91% 赚、持有 2 年几乎没亏过</strong>。这就是「长期持有」最朴素也最有效的逻辑——时间在帮你。</p>
+<p class="imgnote">（配图建议：reports/figs/div_ndx/fig2_pit1.png 的胜率柱状图）</p>
+
+<h2>发现 2：两个搭一起，确实更稳</h2>
+<p>很多人不知道为什么要「红利低波 + 纳指」一起买，其实关键是它俩<strong>不太同涨同跌</strong>：</p>
+<table>
+<tr><th>指标</th><th>只买红利低波</th><th>只买纳指100</th><th>50/50 组合</th></tr>
+<tr><td>日收益相关性</td><td colspan="3">仅 0.24（1=完全同步，0=各走各的）</td></tr>
+<tr><td>年化波动（颠簸程度）</td><td>17%</td><td>24%</td><td><strong>16%</strong></td></tr>
+<tr><td>历史最大回撤</td><td>-17%</td><td>-28%</td><td><strong>-18%</strong></td></tr>
+</table>
+<p>注意组合波动 <strong>16%，比单买任何一个都低</strong>——这就是低相关资产组合的数学礼物：红利低波管「稳」，纳指管「进攻 + 对冲人民币贬值」，一个回调时另一个常常顶上。所以「这两个就够了，不必再加」是有数据支撑的。</p>
+
+<h2>发现 3：「逢低抄底」其实没比无脑定投强多少</h2>
+<p>我把「攒着钱等下跌再买」和「无脑每月定投」放在<strong>相同的资金注入节奏</strong>下对比，最后变成几倍：</p>
+<table>
+<tr><th>买入方式</th><th>期末倍数</th></tr>
+<tr><td>每月定投</td><td>1.86x</td></tr>
+<tr><td>回撤 5% 才买</td><td>1.89x</td></tr>
+<tr><td>回撤 10% 才买</td><td>1.92x</td></tr>
+<tr><td>回撤 15% 才买</td><td>2.10x</td></tr>
+<tr><td>回撤 20% 才买</td><td>2.19x</td></tr>
+</table>
+<p>看上去「越激进越赚」，<strong>但这是陷阱</strong>：回撤 20% 才买的那种，有 <strong>15% 的钱一整年都没投出去、踏空了上涨</strong>，它的高收益全靠这几年「每次大跌都快速反弹」。换成长期阴跌的慢熊，攒钱等抄底会非常难受，而且「越跌越不敢买」是人性。</p>
+<blockquote>结论：<strong>定投打底 + 明显大跌（跌 10%+）时适度加码</strong>就够了，别赌「会有更大的跌」。</blockquote>
+
+<h2>当前位置（2026-05-22）：该买哪个？</h2>
+<p>截至写文时，<strong>纳指 100 在历史新高（基本没回调），红利低波从一年高点回撤了约 7%</strong>。按「买跌得更多的那个」的逻辑，当前更应该补红利低波。这属于常规定投选择，还没到「大跌加码」的程度。</p>
+
+<h2>⚠️ 2 个必须避开的坑</h2>
+<p><strong>坑 ①：上面的高胜率，不能当「稳赚」铁律。</strong>红利低波 ETF 只有约 7 年数据、且几乎全程是上涨行情，真正「独立的 3 年时间段」只有 2–3 个，样本太少。它说明「长期大概率赚」，但<strong>不等于未来一定 100% 赚</strong>——像日本「失去的十年」那种长期横盘，这段历史里根本没出现过。</p>
+<p class="warn"><strong>坑 ②：现在买纳指 100，务必先看「溢价」。</strong>就在 <strong>2026 年 5 月</strong>，华夏、富国、招商、嘉实、华泰柏瑞等<strong>多只纳指 100 QDII 接连发布「溢价风险提示公告」，场内溢价率维持在 10% 以上</strong>。溢价就是场内交易价高出真实净值的部分，买在高溢价时，未来溢价回落会直接吃掉你的收益。买入前一定查当天溢价率/IOPV，溢价偏高（如 >3~5%）时少买，或换一只申购额度充足、溢价低的同类产品。</p>
+
+<h2>我的买卖规则（照抄即可）</h2>
+<p><strong>买入：</strong></p>
+<ul>
+<li>打底：每月固定一笔，目标 50% 红利低波 + 50% 纳指 100，别择时别停；</li>
+<li>加码方向：优先买「距一年高点回撤更多」的那个；</li>
+<li>大跌加力：回撤 >10% 整笔买它，>20% 可动用备用金但留子弹；</li>
+<li>买纳指前看溢价，>3~5% 少买或换标的。</li>
+</ul>
+<p><strong>卖出（基本不卖，只在三种情况）：</strong></p>
+<ul>
+<li>需要用钱：优先卖更贵/涨更多的那个；</li>
+<li>再平衡：比例失衡到约 65:35 时，卖涨多的补跌的，拉回 50/50（一年 1–2 次足够）；</li>
+<li>纳指溢价极高（>10%）时减一点；</li>
+<li>永远不要因短期下跌恐慌割肉——持有 1 年 96% 概率是赚的。</li>
+</ul>
+
+<h2>结论与数据说明</h2>
+<p>「红利低波 + 纳指 100 + 长期持有」是一套对普通人友好、逻辑自洽的组合。但请把它理解成<strong>「长期大概率赚的低维护组合」，而不是「稳赚的躺赚神器」</strong>；当下尤其注意 QDII 溢价。</p>
+<p>本文所有数字来自我自己的回测脚本（前复权日线，含数据获取、持有期胜率、逢低 vs 定投对比），<strong>可复现、可自验</strong>。代码开源在 <code>github.com/[你的ID占位]/[repo占位]</code>，我各平台同名「[你的ID占位]」，知乎 / B 站 / 小红书都能搜到。</p>
+<p class="imgnote">（风险提示：历史表现不代表未来结果，本文不构成投资建议。）</p>
+
+</body></html>
